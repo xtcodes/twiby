@@ -3,35 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Alat Twibbon Sederhana</title>
+  <title>Twibbon Step-by-Step</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Alat Twibbon</h1>
 
-    <!-- Step 1: Upload Foto -->
-    <div class="step">
-      <label for="upload-photo">1. Upload Foto Profil:</label>
+    <h1>Alat Twibbon Step-by-Step</h1>
+
+    <div class="step step-1 active">
+      <h2>Langkah 1: Upload Foto</h2>
       <input type="file" id="upload-photo" accept="image/*">
     </div>
 
-    <!-- Step 2: Upload Twibbon PNG -->
-    <div class="step">
-      <label for="upload-frame">2. Upload Twibbon PNG (transparan):</label>
+    <div class="step step-2">
+      <h2>Langkah 2: Upload Twibbon (PNG Transparan)</h2>
       <input type="file" id="upload-frame" accept="image/png">
     </div>
 
-    <!-- Step 3: Canvas Preview -->
-    <div class="step">
-      <label>3. Pratinjau:</label>
+    <div class="step step-3">
+      <h2>Langkah 3: Pratinjau</h2>
       <canvas id="preview-canvas" width="500" height="500"></canvas>
     </div>
 
-    <!-- Step 4: Save Result -->
-    <div class="step">
-      <button id="download-btn">4. Simpan Gambar</button>
+    <div class="step step-4">
+      <h2>Langkah 4: Unduh Gambar</h2>
+      <button id="download-btn">Unduh Hasil</button>
     </div>
+
+    <div class="navigation">
+      <button id="prev-btn" disabled>Sebelumnya</button>
+      <button id="next-btn">Selanjutnya</button>
+    </div>
+
   </div>
 
   <script src="script.js"></script>
