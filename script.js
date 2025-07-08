@@ -1,19 +1,30 @@
+// ==== Navigasi Step ====
 const steps = document.querySelectorAll('.step');
 const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
-
 let currentStep = 0;
+
 function showStep(index) {
   steps.forEach((step, i) => {
     step.classList.toggle('active', i === index);
   });
+
   prevBtn.disabled = index === 0;
   nextBtn.textContent = index === steps.length - 1 ? 'Selesai' : 'Selanjutnya';
+
+  // ✅ Gambar ulang canvas saat masuk ke langkah ke-4
+  if (index === 3) {
+    drawCanvas();
+  }
 }
+
 prevBtn.addEventListener('click', () => {
-  if (currentStep > 0) currentStep--;
-  showStep(currentStep);
+  if (currentStep > 0) {
+    currentStep--;
+    showStep(currentStep);
+  }
 });
+
 nextBtn.addEventListener('click', () => {
   if (currentStep < steps.length - 1) {
     currentStep++;
@@ -22,9 +33,10 @@ nextBtn.addEventListener('click', () => {
     alert('Twibbon selesai dibuat!');
   }
 });
+
 showStep(currentStep);
 
-// === Logika Upload dan Preview ===
+// ==== Upload & Pratinjau ====
 const photoInput = document.getElementById('upload-photo');
 const frameInput = document.getElementById('upload-frame');
 const photoPreview = document.getElementById('photo-preview');
@@ -37,16 +49,18 @@ const downloadBtn = document.getElementById('download-btn');
 let photoImage = new Image();
 let frameImage = new Image();
 
-// Transformasi user
+// ==== Transformasi Interaktif ====
 let scale = 1;
 let pos = { x: 0, y: 0 };
 let isDragging = false;
 let last = { x: 0, y: 0 };
 
+// Mouse Events (Desktop)
 canvas.addEventListener('mousedown', e => {
   isDragging = true;
   last = { x: e.offsetX, y: e.offsetY };
 });
+
 canvas.addEventListener('mousemove', e => {
   if (isDragging) {
     const dx = e.offsetX - last.x;
@@ -57,6 +71,7 @@ canvas.addEventListener('mousemove', e => {
     drawCanvas();
   }
 });
+
 canvas.addEventListener('mouseup', () => isDragging = false);
 canvas.addEventListener('mouseleave', () => isDragging = false);
 
@@ -68,8 +83,9 @@ canvas.addEventListener('wheel', e => {
   drawCanvas();
 });
 
-// Zoom pinch (mobile)
+// Touch Events (Mobile)
 let initialDistance = null;
+
 canvas.addEventListener('touchstart', e => {
   if (e.touches.length === 2) {
     initialDistance = getDistance(e.touches[0], e.touches[1]);
@@ -98,16 +114,14 @@ canvas.addEventListener('touchmove', e => {
   }
 }, { passive: false });
 
-canvas.addEventListener('touchend', e => {
-  if (e.touches.length < 2) {
-    initialDistance = null;
-    isDragging = false;
-  }
+canvas.addEventListener('touchend', () => {
+  initialDistance = null;
+  isDragging = false;
 });
 
-function getDistance(touch1, touch2) {
-  const dx = touch1.clientX - touch2.clientX;
-  const dy = touch1.clientY - touch2.clientY;
+function getDistance(t1, t2) {
+  const dx = t1.clientX - t2.clientX;
+  const dy = t1.clientY - t2.clientY;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
@@ -119,7 +133,7 @@ function getTouchPos(canvas, touch) {
   };
 }
 
-// Upload foto
+// ==== Upload Foto ====
 photoInput.addEventListener('change', function () {
   const file = this.files[0];
   if (file) {
@@ -129,7 +143,6 @@ photoInput.addEventListener('change', function () {
       photoPreview.style.display = 'block';
 
       photoImage.onload = () => {
-        // Reset posisi dan skala
         scale = 1;
         pos = { x: 0, y: 0 };
         drawCanvas();
@@ -140,7 +153,7 @@ photoInput.addEventListener('change', function () {
   }
 });
 
-// Upload twibbon PNG
+// ==== Upload Twibbon ====
 frameInput.addEventListener('change', function () {
   const file = this.files[0];
   if (file && file.type === 'image/png') {
@@ -156,11 +169,11 @@ frameInput.addEventListener('change', function () {
   }
 });
 
-// Menggambar ke canvas
+// ==== Menggambar ke Canvas ====
 function drawCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (photoImage.src) {
+  if (photoImage.src && photoImage.complete && photoImage.naturalWidth > 0) {
     const w = canvas.width * scale;
     const h = canvas.height * scale;
     const x = (canvas.width - w) / 2 + pos.x;
@@ -168,13 +181,17 @@ function drawCanvas() {
     ctx.drawImage(photoImage, x, y, w, h);
   }
 
-  if (frameImage.src) {
+  if (frameImage.src && frameImage.complete && frameImage.naturalWidth > 0) {
     ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
   }
+
+  // Debug log
+  // console.log("Canvas redrawn", { scale, pos });
 }
 
-// Unduh hasil
+// ==== Unduh Gambar ====
 downloadBtn.addEventListener('click', function () {
+  drawCanvas(); // Pastikan canvas terakhir digambar ulang
   const link = document.createElement('a');
   link.download = 'twibbon.png';
   link.href = canvas.toDataURL('image/png');
