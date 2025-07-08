@@ -11,28 +11,33 @@
 
     <h1>Alat Twibbon Step-by-Step</h1>
 
-    <div class="step step-1 active">
+    <!-- Step 1 -->
+    <div class="step" id="step-1">
       <h2>Langkah 1: Upload Foto</h2>
       <input type="file" id="upload-photo" accept="image/*">
     </div>
 
-    <div class="step step-2">
+    <!-- Step 2 -->
+    <div class="step" id="step-2">
       <h2>Langkah 2: Upload Twibbon (PNG Transparan)</h2>
       <input type="file" id="upload-frame" accept="image/png">
     </div>
 
-    <div class="step step-3">
+    <!-- Step 3 -->
+    <div class="step" id="step-3">
       <h2>Langkah 3: Pratinjau</h2>
       <canvas id="preview-canvas" width="500" height="500"></canvas>
     </div>
 
-    <div class="step step-4">
+    <!-- Step 4 -->
+    <div class="step" id="step-4">
       <h2>Langkah 4: Unduh Gambar</h2>
       <button id="download-btn">Unduh Hasil</button>
     </div>
 
+    <!-- Navigasi -->
     <div class="navigation">
-      <button id="prev-btn" disabled>Sebelumnya</button>
+      <button id="prev-btn">Sebelumnya</button>
       <button id="next-btn">Selanjutnya</button>
     </div>
 
