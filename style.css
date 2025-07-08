@@ -1,24 +1,40 @@
 body {
   font-family: sans-serif;
+  background-color: #f4f4f4;
   text-align: center;
-  background: #f0f0f0;
+  margin: 0;
+  padding: 20px;
 }
 
 .container {
+  background: white;
   max-width: 600px;
   margin: auto;
-  padding: 20px;
-  background: white;
+  padding: 30px;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
 }
 
 .step {
-  margin: 20px 0;
+  display: none;
+}
+
+.step.active {
+  display: block;
 }
 
 canvas {
   border: 1px solid #ccc;
   max-width: 100%;
-  height: auto;
+  margin-top: 10px;
+}
+
+.navigation {
+  margin-top: 30px;
+}
+
+.navigation button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin: 0 10px;
 }
