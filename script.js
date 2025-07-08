@@ -4,30 +4,34 @@ const nextBtn = document.getElementById('next-btn');
 
 let currentStep = 0;
 
-function updateStep() {
-  steps.forEach((step, index) => {
-    step.classList.toggle('active', index === currentStep);
+function showStep(index) {
+  steps.forEach((step, i) => {
+    step.classList.toggle('active', i === index);
   });
 
-  prevBtn.disabled = currentStep === 0;
-  nextBtn.textContent = currentStep === steps.length - 1 ? 'Selesai' : 'Selanjutnya';
+  // Ubah status tombol
+  prevBtn.disabled = index === 0;
+  nextBtn.textContent = index === steps.length - 1 ? 'Selesai' : 'Selanjutnya';
 }
 
 prevBtn.addEventListener('click', () => {
   if (currentStep > 0) {
     currentStep--;
-    updateStep();
+    showStep(currentStep);
   }
 });
 
 nextBtn.addEventListener('click', () => {
   if (currentStep < steps.length - 1) {
     currentStep++;
-    updateStep();
+    showStep(currentStep);
   } else {
     alert('Twibbon selesai dibuat!');
   }
 });
+
+// Tampilkan langkah pertama saat load
+showStep(currentStep);
 
 // Gambar dan Canvas Logic
 const photoInput = document.getElementById('upload-photo');
@@ -79,5 +83,3 @@ downloadBtn.addEventListener('click', function() {
   link.href = canvas.toDataURL('image/png');
   link.click();
 });
-
-updateStep();
