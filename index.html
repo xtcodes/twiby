@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alat Twibbon Sederhana</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Alat Twibbon</h1>
+
+    <!-- Step 1: Upload Foto -->
+    <div class="step">
+      <label for="upload-photo">1. Upload Foto Profil:</label>
+      <input type="file" id="upload-photo" accept="image/*">
+    </div>
+
+    <!-- Step 2: Upload Twibbon PNG -->
+    <div class="step">
+      <label for="upload-frame">2. Upload Twibbon PNG (transparan):</label>
+      <input type="file" id="upload-frame" accept="image/png">
+    </div>
+
+    <!-- Step 3: Canvas Preview -->
+    <div class="step">
+      <label>3. Pratinjau:</label>
+      <canvas id="preview-canvas" width="500" height="500"></canvas>
+    </div>
+
+    <!-- Step 4: Save Result -->
+    <div class="step">
+      <button id="download-btn">4. Simpan Gambar</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
