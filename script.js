@@ -50,6 +50,10 @@ photoInput.addEventListener('change', function() {
     reader.onload = function(e) {
       photoImage.onload = drawCanvas;
       photoImage.src = e.target.result;
+
+      // Tampilkan preview
+      photoPreview.src = e.target.result;
+      photoPreview.style.display = 'block';
     };
     reader.readAsDataURL(file);
   }
@@ -62,6 +66,10 @@ frameInput.addEventListener('change', function() {
     reader.onload = function(e) {
       frameImage.onload = drawCanvas;
       frameImage.src = e.target.result;
+
+      // Tampilkan preview
+      framePreview.src = e.target.result;
+      framePreview.style.display = 'block';
     };
     reader.readAsDataURL(file);
   }
