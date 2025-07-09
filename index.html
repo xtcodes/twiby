@@ -114,6 +114,11 @@
       0% { transform: rotate(0deg);}
       100% { transform: rotate(360deg);}
     }
+    #countdown {
+      font-size: 14px;
+      margin-top: 8px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
@@ -146,7 +151,8 @@
     <div class="step" id="step-4">
       <h2>Langkah 4: Pratinjau & Unduh</h2>
       <canvas id="preview-canvas" width="500" height="500"></canvas><br>
-      <button id="download-btn">Unduh Hasil</button>
+      <button id="download-btn" disabled>Unduh Hasil</button>
+      <div id="countdown">Mohon tunggu 15 detik...</div>
     </div>
 
     <div class="navigation">
@@ -162,6 +168,8 @@
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const spinner = document.getElementById('spinner');
+    const countdownText = document.getElementById('countdown');
+    const downloadBtn = document.getElementById('download-btn');
 
     const photoInput = document.getElementById('upload-photo');
     const frameInput = document.getElementById('upload-frame');
@@ -169,7 +177,6 @@
     const framePreview = document.getElementById('frame-preview');
     const canvas = document.getElementById('preview-canvas');
     const ctx = canvas.getContext('2d');
-    const downloadBtn = document.getElementById('download-btn');
 
     let photoImage = new Image();
     let frameImage = new Image();
@@ -182,17 +189,36 @@
     function showStep(i) {
       steps[currentStep].classList.remove('active');
       steps[currentStep].classList.add('left-exit');
-      setTimeout(() => {
-        steps[currentStep].classList.remove('left-exit');
-      }, 500);
-
+      setTimeout(() => steps[currentStep].classList.remove('left-exit'), 500);
       steps[i].classList.add('active');
-
       currentStep = i;
       prevBtn.disabled = currentStep === 0;
       nextBtn.textContent = currentStep === steps.length - 1 ? 'Muat Ulang' : 'Selanjutnya';
 
-      if (currentStep === 3) drawCanvas();
+      if (currentStep === 3) {
+        drawCanvas();
+        showSpinner();
+        startCountdown(15);
+      }
+    }
+
+    function startCountdown(seconds) {
+      downloadBtn.disabled = true;
+      countdownText.style.display = 'block';
+      let time = seconds;
+      const interval = setInterval(() => {
+        countdownText.textContent = `Mohon tunggu ${time--} detik...`;
+        if (time < 0) {
+          clearInterval(interval);
+          spinner.style.display = 'none';
+          downloadBtn.disabled = false;
+          countdownText.style.display = 'none';
+        }
+      }, 1000);
+    }
+
+    function showSpinner() {
+      spinner.style.display = 'block';
     }
 
     prevBtn.onclick = () => {
@@ -200,10 +226,7 @@
     };
 
     nextBtn.onclick = () => {
-      if (nextBtn.textContent === 'Muat Ulang') {
-        resetApp();
-        return;
-      }
+      if (nextBtn.textContent === 'Muat Ulang') return resetApp();
       if (currentStep === 0 && !photoImage.src) return alert("Silakan unggah foto dulu.");
       if (currentStep === 1 && !frameImage.src) return alert("Silakan unggah twibbon dulu.");
       if (currentStep < steps.length - 1) showStep(currentStep + 1);
@@ -219,12 +242,10 @@
       photoPreview.src = framePreview.src = '';
       photoPreview.style.display = framePreview.style.display = 'none';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      spinner.style.display = 'none';
+      countdownText.style.display = 'none';
+      downloadBtn.disabled = true;
       showStep(0);
-    }
-
-    function showSpinner() {
-      spinner.style.display = 'block';
-      setTimeout(() => spinner.style.display = 'none', 3000); // 3s simulasi loading
     }
 
     function dropHandler(zone, input, imgTag, imgObj) {
@@ -258,6 +279,7 @@
           scale = 1;
           pos = { x: 0, y: 0 };
         }
+        spinner.style.display = 'none';
       };
       reader.readAsDataURL(file);
     }
@@ -276,14 +298,14 @@
       }
     }
 
-    // Touch and mouse events
-    canvas.addEventListener('mousedown', e => { isDragging = true; last = { x: e.offsetX, y: e.offsetY }; });
+    canvas.addEventListener('mousedown', e => {
+      isDragging = true;
+      last = { x: e.offsetX, y: e.offsetY };
+    });
     canvas.addEventListener('mousemove', e => {
       if (isDragging) {
-        const dx = e.offsetX - last.x;
-        const dy = e.offsetY - last.y;
-        pos.x += dx;
-        pos.y += dy;
+        pos.x += e.offsetX - last.x;
+        pos.y += e.offsetY - last.y;
         last = { x: e.offsetX, y: e.offsetY };
         drawCanvas();
       }
@@ -296,24 +318,15 @@
       drawCanvas();
     });
 
-    // Touch gestures
-    let initialDistance = null;
     canvas.addEventListener('touchstart', e => {
-      if (e.touches.length === 2) {
-        initialDistance = getDistance(e.touches[0], e.touches[1]);
-      } else if (e.touches.length === 1) {
+      if (e.touches.length === 1) {
         isDragging = true;
         last = getTouchPos(canvas, e.touches[0]);
       }
     }, { passive: false });
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
-      if (e.touches.length === 2 && initialDistance !== null) {
-        const newDistance = getDistance(e.touches[0], e.touches[1]);
-        scale = Math.max(0.1, scale + (newDistance - initialDistance) / 200);
-        initialDistance = newDistance;
-        drawCanvas();
-      } else if (e.touches.length === 1 && isDragging) {
+      if (isDragging) {
         const touchPos = getTouchPos(canvas, e.touches[0]);
         pos.x += touchPos.x - last.x;
         pos.y += touchPos.y - last.y;
@@ -321,16 +334,7 @@
         drawCanvas();
       }
     }, { passive: false });
-    canvas.addEventListener('touchend', () => {
-      initialDistance = null;
-      isDragging = false;
-    });
-
-    function getDistance(t1, t2) {
-      const dx = t1.clientX - t2.clientX;
-      const dy = t1.clientY - t2.clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
+    canvas.addEventListener('touchend', () => isDragging = false);
 
     function getTouchPos(canvas, touch) {
       const rect = canvas.getBoundingClientRect();
