@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Alat Twibbon Interaktif</title>
+  <title>Alat Twibbon Drag & Drop</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f3f3f3;
+      background: #f3f3f3;
       margin: 0;
       padding: 20px;
       text-align: center;
@@ -26,20 +26,46 @@
     .step.active {
       display: block;
     }
-    input[type="file"] {
+    .dropzone {
+      border: 2px dashed #aaa;
+      padding: 30px;
+      border-radius: 10px;
+      background: #fafafa;
+      cursor: pointer;
+      margin-top: 15px;
+      position: relative;
+    }
+    .dropzone:hover {
+      background: #f0f0f0;
+    }
+    .dropzone img {
+      max-width: 100%;
+      border-radius: 8px;
       margin-top: 10px;
     }
-    img {
-      max-width: 100%;
-      border: 1px solid #ccc;
+    .square-preview {
+      width: 100%;
+      padding-top: 100%; /* 1:1 aspect ratio */
+      position: relative;
+      background: #eee;
+      border-radius: 10px;
+      overflow: hidden;
       margin-top: 10px;
-      border-radius: 8px;
+    }
+    .square-preview img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     canvas {
-      max-width: 100%;
-      margin-top: 10px;
+      width: 100%;
+      max-width: 500px;
+      aspect-ratio: 1 / 1;
       border: 1px solid #ccc;
       border-radius: 8px;
+      margin-top: 10px;
       touch-action: none;
     }
     .navigation {
@@ -63,26 +89,32 @@
 </head>
 <body>
   <div class="container">
-    <h1>Alat Twibbon Interaktif</h1>
+    <h1>Twibbon Drag & Drop</h1>
 
     <!-- Step 1 -->
     <div class="step" id="step-1">
-      <h2>Langkah 1: Upload Foto</h2>
-      <input type="file" id="upload-photo" accept="image/*"><br>
-      <img id="photo-preview" style="display: none;" alt="Preview Foto">
+      <h2>Langkah 1: Seret/Drop Foto</h2>
+      <div class="dropzone" id="drop-photo">
+        <p>Seret foto ke sini atau klik untuk pilih</p>
+        <div class="square-preview"><img id="photo-preview" style="display: none;" /></div>
+        <input type="file" id="upload-photo" accept="image/*" style="display: none;" />
+      </div>
     </div>
 
     <!-- Step 2 -->
     <div class="step" id="step-2">
-      <h2>Langkah 2: Upload Twibbon (PNG Transparan)</h2>
-      <input type="file" id="upload-frame" accept="image/png"><br>
-      <img id="frame-preview" style="display: none;" alt="Preview Twibbon">
+      <h2>Langkah 2: Seret Twibbon PNG</h2>
+      <div class="dropzone" id="drop-frame">
+        <p>Seret twibbon PNG transparan ke sini atau klik</p>
+        <div class="square-preview"><img id="frame-preview" style="display: none;" /></div>
+        <input type="file" id="upload-frame" accept="image/png" style="display: none;" />
+      </div>
     </div>
 
     <!-- Step 3 -->
     <div class="step" id="step-3">
-      <h2>Langkah 3: Siapkan Komposisi</h2>
-      <p>Kamu bisa menggeser dan memperbesar foto sebelum diunduh.</p>
+      <h2>Langkah 3: Atur Komposisi</h2>
+      <p>Geser atau zoom foto sebelum menyimpan.</p>
     </div>
 
     <!-- Step 4 -->
@@ -92,7 +124,6 @@
       <button id="download-btn">Unduh Hasil</button>
     </div>
 
-    <!-- Navigasi -->
     <div class="navigation">
       <button id="prev-btn">Sebelumnya</button>
       <button id="next-btn">Selanjutnya</button>
@@ -100,42 +131,22 @@
   </div>
 
   <script>
-    // ==== Navigasi Step ====
+    // === Navigasi ===
     const steps = document.querySelectorAll('.step');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     let currentStep = 0;
-
-    function showStep(index) {
-      steps.forEach((step, i) => {
-        step.classList.toggle('active', i === index);
-      });
-
-      prevBtn.disabled = index === 0;
-      nextBtn.textContent = index === steps.length - 1 ? 'Selesai' : 'Selanjutnya';
-
-      if (index === 3) drawCanvas();
+    function showStep(i) {
+      steps.forEach((s, idx) => s.classList.toggle('active', idx === i));
+      prevBtn.disabled = i === 0;
+      nextBtn.textContent = i === steps.length - 1 ? 'Selesai' : 'Selanjutnya';
+      if (i === 3) drawCanvas();
     }
-
-    prevBtn.addEventListener('click', () => {
-      if (currentStep > 0) {
-        currentStep--;
-        showStep(currentStep);
-      }
-    });
-
-    nextBtn.addEventListener('click', () => {
-      if (currentStep < steps.length - 1) {
-        currentStep++;
-        showStep(currentStep);
-      } else {
-        alert('Twibbon selesai dibuat!');
-      }
-    });
-
+    prevBtn.onclick = () => currentStep--, showStep(currentStep);
+    nextBtn.onclick = () => currentStep < 3 ? currentStep++ : alert('Twibbon selesai!'), showStep(currentStep);
     showStep(currentStep);
 
-    // ==== Upload & Pratinjau ====
+    // === Upload, Preview, Transformasi ===
     const photoInput = document.getElementById('upload-photo');
     const frameInput = document.getElementById('upload-frame');
     const photoPreview = document.getElementById('photo-preview');
@@ -146,55 +157,59 @@
 
     let photoImage = new Image();
     let frameImage = new Image();
+    let scale = 1, pos = { x: 0, y: 0 }, isDragging = false, last = { x: 0, y: 0 };
 
-    // Transformasi interaktif
-    let scale = 1;
-    let pos = { x: 0, y: 0 };
-    let isDragging = false;
-    let last = { x: 0, y: 0 };
+    const dropHandler = (zone, input, img, imgObj) => {
+      zone.addEventListener('click', () => input.click());
+      zone.addEventListener('dragover', e => e.preventDefault());
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          handleFile(file, img, imgObj);
+        }
+      });
+      input.addEventListener('change', () => {
+        if (input.files[0]) handleFile(input.files[0], img, imgObj);
+      });
+    };
 
-    // Upload foto
-    photoInput.addEventListener('change', function () {
-      const file = this.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          photoPreview.src = e.target.result;
-          photoPreview.style.display = 'block';
+    function handleFile(file, imgTag, imageObj) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        imgTag.src = reader.result;
+        imgTag.style.display = 'block';
+        imageObj.onload = drawCanvas;
+        imageObj.src = reader.result;
+        if (imageObj === photoImage) {
+          scale = 1;
+          pos = { x: 0, y: 0 };
+        }
+      };
+      reader.readAsDataURL(file);
+    }
 
-          photoImage.onload = () => {
-            scale = 1;
-            pos = { x: 0, y: 0 };
-            drawCanvas();
-          };
-          photoImage.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+    dropHandler(document.getElementById('drop-photo'), photoInput, photoPreview, photoImage);
+    dropHandler(document.getElementById('drop-frame'), frameInput, framePreview, frameImage);
+
+    function drawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (photoImage.src && photoImage.complete) {
+        const w = canvas.width * scale;
+        const h = canvas.height * scale;
+        const x = (canvas.width - w) / 2 + pos.x;
+        const y = (canvas.height - h) / 2 + pos.y;
+        ctx.drawImage(photoImage, x, y, w, h);
       }
-    });
-
-    // Upload twibbon
-    frameInput.addEventListener('change', function () {
-      const file = this.files[0];
-      if (file && file.type === 'image/png') {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          framePreview.src = e.target.result;
-          framePreview.style.display = 'block';
-
-          frameImage.onload = drawCanvas;
-          frameImage.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+      if (frameImage.src && frameImage.complete) {
+        ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
       }
-    });
+    }
 
-    // ===== Interaktif Canvas: Geser & Zoom =====
     canvas.addEventListener('mousedown', e => {
       isDragging = true;
       last = { x: e.offsetX, y: e.offsetY };
     });
-
     canvas.addEventListener('mousemove', e => {
       if (isDragging) {
         const dx = e.offsetX - last.x;
@@ -205,10 +220,8 @@
         drawCanvas();
       }
     });
-
     canvas.addEventListener('mouseup', () => isDragging = false);
     canvas.addEventListener('mouseleave', () => isDragging = false);
-
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.05 : 0.05;
@@ -216,7 +229,7 @@
       drawCanvas();
     });
 
-    // Touch (mobile)
+    // Touch gesture
     let initialDistance = null;
     canvas.addEventListener('touchstart', e => {
       if (e.touches.length === 2) {
@@ -265,31 +278,13 @@
       };
     }
 
-    // Gambar ke canvas
-    function drawCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (photoImage.src && photoImage.complete && photoImage.naturalWidth > 0) {
-        const w = canvas.width * scale;
-        const h = canvas.height * scale;
-        const x = (canvas.width - w) / 2 + pos.x;
-        const y = (canvas.height - h) / 2 + pos.y;
-        ctx.drawImage(photoImage, x, y, w, h);
-      }
-
-      if (frameImage.src && frameImage.complete && frameImage.naturalWidth > 0) {
-        ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
-      }
-    }
-
-    // Unduh
-    downloadBtn.addEventListener('click', () => {
+    downloadBtn.onclick = () => {
       drawCanvas();
       const link = document.createElement('a');
       link.download = 'twibbon.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
-    });
+    };
   </script>
 </body>
 </html>
