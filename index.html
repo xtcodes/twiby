@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Twibbon Drag & Drop</title>
   <style>
     body {
@@ -23,23 +23,10 @@
       overflow: hidden;
     }
     .step {
-      position: absolute;
-      width: 100%;
-      left: 0;
-      top: 0;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateX(100%);
-      transition: transform 0.5s ease, opacity 0.5s ease;
+      display: none;
     }
     .step.active {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateX(0);
-      position: relative;
-    }
-    .step.left-exit {
-      transform: translateX(-100%);
+      display: block;
     }
     .dropzone {
       border: 2px dashed #aaa;
@@ -48,9 +35,6 @@
       background: #fafafa;
       cursor: pointer;
       margin-top: 15px;
-    }
-    .dropzone:hover {
-      background: #f0f0f0;
     }
     .square-preview {
       width: 100%;
@@ -111,13 +95,14 @@
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin {
-      0% { transform: rotate(0deg);}
-      100% { transform: rotate(360deg);}
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     #countdown {
       font-size: 14px;
       margin-top: 8px;
       color: #888;
+      display: none;
     }
   </style>
 </head>
@@ -151,12 +136,12 @@
     <div class="step" id="step-4">
       <h2>Langkah 4: Pratinjau & Unduh</h2>
       <canvas id="preview-canvas" width="500" height="500"></canvas><br>
-      <button id="download-btn" disabled>Unduh Hasil</button>
-      <div id="countdown">Mohon tunggu 15 detik...</div>
+      <button id="download-btn">Unduh Hasil</button>
+      <div id="countdown">Mohon tunggu...</div>
     </div>
 
     <div class="navigation">
-      <button id="prev-btn">Sebelumnya</button>
+      <button id="prev-btn" disabled>Sebelumnya</button>
       <button id="next-btn">Selanjutnya</button>
     </div>
   </div>
@@ -167,9 +152,9 @@
     const steps = document.querySelectorAll('.step');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
-    const spinner = document.getElementById('spinner');
-    const countdownText = document.getElementById('countdown');
     const downloadBtn = document.getElementById('download-btn');
+    const countdown = document.getElementById('countdown');
+    const spinner = document.getElementById('spinner');
 
     const photoInput = document.getElementById('upload-photo');
     const frameInput = document.getElementById('upload-frame');
@@ -178,47 +163,17 @@
     const canvas = document.getElementById('preview-canvas');
     const ctx = canvas.getContext('2d');
 
+    let currentStep = 0;
     let photoImage = new Image();
     let frameImage = new Image();
-    let scale = 1;
-    let pos = { x: 0, y: 0 };
-    let isDragging = false;
-    let last = { x: 0, y: 0 };
-    let currentStep = 0;
+    let scale = 1, pos = { x: 0, y: 0 }, isDragging = false, last = { x: 0, y: 0 }, initialDistance = null;
 
     function showStep(i) {
       steps[currentStep].classList.remove('active');
-      steps[currentStep].classList.add('left-exit');
-      setTimeout(() => steps[currentStep].classList.remove('left-exit'), 500);
-      steps[i].classList.add('active');
       currentStep = i;
+      steps[currentStep].classList.add('active');
       prevBtn.disabled = currentStep === 0;
       nextBtn.textContent = currentStep === steps.length - 1 ? 'Muat Ulang' : 'Selanjutnya';
-
-      if (currentStep === 3) {
-        drawCanvas();
-        showSpinner();
-        startCountdown(15);
-      }
-    }
-
-    function startCountdown(seconds) {
-      downloadBtn.disabled = true;
-      countdownText.style.display = 'block';
-      let time = seconds;
-      const interval = setInterval(() => {
-        countdownText.textContent = `Mohon tunggu ${time--} detik...`;
-        if (time < 0) {
-          clearInterval(interval);
-          spinner.style.display = 'none';
-          downloadBtn.disabled = false;
-          countdownText.style.display = 'none';
-        }
-      }, 1000);
-    }
-
-    function showSpinner() {
-      spinner.style.display = 'block';
     }
 
     prevBtn.onclick = () => {
@@ -226,77 +181,68 @@
     };
 
     nextBtn.onclick = () => {
-      if (nextBtn.textContent === 'Muat Ulang') return resetApp();
-      if (currentStep === 0 && !photoImage.src) return alert("Silakan unggah foto dulu.");
-      if (currentStep === 1 && !frameImage.src) return alert("Silakan unggah twibbon dulu.");
+      if (nextBtn.textContent === 'Muat Ulang') return location.reload();
+      if (currentStep === 0 && !photoImage.src) return alert("Unggah foto terlebih dahulu.");
+      if (currentStep === 1 && !frameImage.src) return alert("Unggah twibbon terlebih dahulu.");
       if (currentStep < steps.length - 1) showStep(currentStep + 1);
     };
-
-    function resetApp() {
-      photoImage = new Image();
-      frameImage = new Image();
-      scale = 1;
-      pos = { x: 0, y: 0 };
-      photoInput.value = '';
-      frameInput.value = '';
-      photoPreview.src = framePreview.src = '';
-      photoPreview.style.display = framePreview.style.display = 'none';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      spinner.style.display = 'none';
-      countdownText.style.display = 'none';
-      downloadBtn.disabled = true;
-      showStep(0);
-    }
-
-    function dropHandler(zone, input, imgTag, imgObj) {
-      zone.addEventListener('click', () => input.click());
-      zone.addEventListener('dragover', e => e.preventDefault());
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-          showSpinner();
-          setTimeout(() => loadImage(file, imgTag, imgObj), 3000);
-        }
-      });
-      input.addEventListener('change', () => {
-        const file = input.files[0];
-        if (file) {
-          showSpinner();
-          setTimeout(() => loadImage(file, imgTag, imgObj), 3000);
-        }
-      });
-    }
 
     function loadImage(file, imgTag, imgObj) {
       const reader = new FileReader();
       reader.onload = () => {
         imgTag.src = reader.result;
         imgTag.style.display = 'block';
-        imgObj.onload = drawCanvas;
         imgObj.src = reader.result;
-        if (imgObj === photoImage) {
-          scale = 1;
-          pos = { x: 0, y: 0 };
-        }
-        spinner.style.display = 'none';
       };
       reader.readAsDataURL(file);
     }
 
+    function handleDrop(zone, input, imgTag, imgObj) {
+      zone.addEventListener('click', () => input.click());
+      zone.addEventListener('dragover', e => e.preventDefault());
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length) loadImage(e.dataTransfer.files[0], imgTag, imgObj);
+      });
+      input.addEventListener('change', () => {
+        if (input.files.length) loadImage(input.files[0], imgTag, imgObj);
+      });
+    }
+
     function drawCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (photoImage.src && photoImage.complete) {
+      if (photoImage.complete && photoImage.src) {
         const w = canvas.width * scale;
         const h = canvas.height * scale;
         const x = (canvas.width - w) / 2 + pos.x;
         const y = (canvas.height - h) / 2 + pos.y;
         ctx.drawImage(photoImage, x, y, w, h);
       }
-      if (frameImage.src && frameImage.complete) {
+      if (frameImage.complete && frameImage.src) {
         ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
       }
     }
+
+    downloadBtn.onclick = () => {
+      spinner.style.display = 'block';
+      countdown.style.display = 'block';
+      let count = 15;
+      countdown.textContent = `Mohon tunggu ${count} detik...`;
+      const timer = setInterval(() => {
+        count--;
+        countdown.textContent = `Mohon tunggu ${count} detik...`;
+        if (count <= 0) {
+          clearInterval(timer);
+          spinner.style.display = 'none';
+          countdown.style.display = 'none';
+          drawCanvas();
+          const link = document.createElement('a');
+          link.download = 'twibbon.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }
+      }, 1000);
+    };
 
     canvas.addEventListener('mousedown', e => {
       isDragging = true;
@@ -314,43 +260,56 @@
     canvas.addEventListener('mouseleave', () => isDragging = false);
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
-      scale = Math.max(0.1, scale + (e.deltaY > 0 ? -0.05 : 0.05));
+      scale += (e.deltaY < 0 ? 0.05 : -0.05);
+      scale = Math.max(0.1, Math.min(scale, 3));
       drawCanvas();
     });
 
     canvas.addEventListener('touchstart', e => {
       if (e.touches.length === 1) {
         isDragging = true;
-        last = getTouchPos(canvas, e.touches[0]);
+        last = getTouchPos(e.touches[0]);
+      } else if (e.touches.length === 2) {
+        initialDistance = getDistance(e.touches);
       }
     }, { passive: false });
+
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
-      if (isDragging) {
-        const touchPos = getTouchPos(canvas, e.touches[0]);
-        pos.x += touchPos.x - last.x;
-        pos.y += touchPos.y - last.y;
-        last = touchPos;
+      if (e.touches.length === 1 && isDragging) {
+        const touch = getTouchPos(e.touches[0]);
+        pos.x += touch.x - last.x;
+        pos.y += touch.y - last.y;
+        last = touch;
+        drawCanvas();
+      } else if (e.touches.length === 2 && initialDistance) {
+        const newDist = getDistance(e.touches);
+        scale *= newDist / initialDistance;
+        scale = Math.max(0.1, Math.min(scale, 3));
+        initialDistance = newDist;
         drawCanvas();
       }
     }, { passive: false });
-    canvas.addEventListener('touchend', () => isDragging = false);
 
-    function getTouchPos(canvas, touch) {
+    canvas.addEventListener('touchend', () => {
+      isDragging = false;
+      initialDistance = null;
+    });
+
+    function getTouchPos(touch) {
       const rect = canvas.getBoundingClientRect();
       return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     }
 
-    downloadBtn.onclick = () => {
-      drawCanvas();
-      const link = document.createElement('a');
-      link.download = 'twibbon.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    };
+    function getDistance(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
 
-    dropHandler(document.getElementById('drop-photo'), photoInput, photoPreview, photoImage);
-    dropHandler(document.getElementById('drop-frame'), frameInput, framePreview, frameImage);
+    handleDrop(document.getElementById('drop-photo'), photoInput, photoPreview, photoImage);
+    handleDrop(document.getElementById('drop-frame'), frameInput, framePreview, frameImage);
+    [photoImage, frameImage].forEach(img => img.onload = drawCanvas);
   </script>
 </body>
 </html>
