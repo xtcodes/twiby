@@ -129,7 +129,6 @@
     const steps = document.querySelectorAll('.step');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
-    let currentStep = 0;
 
     const photoInput = document.getElementById('upload-photo');
     const frameInput = document.getElementById('upload-frame');
@@ -145,11 +144,12 @@
     let pos = { x: 0, y: 0 };
     let isDragging = false;
     let last = { x: 0, y: 0 };
+    let currentStep = 0;
 
     function showStep(i) {
       steps.forEach((s, idx) => s.classList.toggle('active', idx === i));
       prevBtn.disabled = i === 0;
-      nextBtn.textContent = i === steps.length - 1 ? 'Selesai' : 'Selanjutnya';
+      nextBtn.textContent = i === steps.length - 1 ? 'Muat Ulang' : 'Selanjutnya';
       if (i === 3) drawCanvas();
     }
 
@@ -161,25 +161,47 @@
     };
 
     nextBtn.onclick = () => {
+      if (nextBtn.textContent === "Muat Ulang") {
+        resetApp();
+        return;
+      }
+
       if (currentStep === 0 && !photoImage.src) {
         alert("Silakan unggah foto terlebih dahulu.");
         return;
       }
+
       if (currentStep === 1 && !frameImage.src) {
         alert("Silakan unggah twibbon PNG terlebih dahulu.");
         return;
       }
+
       if (currentStep < steps.length - 1) {
         currentStep++;
         showStep(currentStep);
-      } else {
-        alert("Twibbon selesai!");
       }
     };
 
     showStep(currentStep);
 
-    // Drag & drop
+    function resetApp() {
+      photoImage = new Image();
+      frameImage = new Image();
+      scale = 1;
+      pos = { x: 0, y: 0 };
+      currentStep = 0;
+
+      photoPreview.src = "";
+      framePreview.src = "";
+      photoPreview.style.display = "none";
+      framePreview.style.display = "none";
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      photoInput.value = "";
+      frameInput.value = "";
+
+      showStep(currentStep);
+    }
+
     function dropHandler(zone, input, imgTag, imgObj) {
       zone.addEventListener('click', () => input.click());
       zone.addEventListener('dragover', e => e.preventDefault());
@@ -229,7 +251,7 @@
       }
     }
 
-    // Drag & Zoom Desktop
+    // Desktop drag
     canvas.addEventListener('mousedown', e => {
       isDragging = true;
       last = { x: e.offsetX, y: e.offsetY };
