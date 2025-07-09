@@ -14,29 +14,32 @@
     }
     .container {
       max-width: 600px;
-      background: #fff;
       margin: auto;
       padding: 30px;
+      background: #fff;
       border-radius: 12px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       position: relative;
       overflow: hidden;
     }
     .step {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(30px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
       position: absolute;
       width: 100%;
       left: 0;
       top: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(100%);
+      transition: transform 0.5s ease, opacity 0.5s ease;
     }
     .step.active {
       opacity: 1;
       pointer-events: auto;
-      transform: translateY(0);
+      transform: translateX(0);
       position: relative;
+    }
+    .step.left-exit {
+      transform: translateX(-100%);
     }
     .dropzone {
       border: 2px dashed #aaa;
@@ -45,7 +48,6 @@
       background: #fafafa;
       cursor: pointer;
       margin-top: 15px;
-      position: relative;
     }
     .dropzone:hover {
       background: #f0f0f0;
@@ -92,14 +94,33 @@
       background-color: #ccc;
       cursor: not-allowed;
     }
+    #spinner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 999;
+      display: none;
+    }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Twibbon Drag & Drop</h1>
 
-    <!-- Step 1 -->
-    <div class="step" id="step-1">
+    <div class="step active" id="step-1">
       <h2>Langkah 1: Unggah Foto</h2>
       <div class="dropzone" id="drop-photo">
         <p>Seret foto ke sini atau klik untuk pilih</p>
@@ -108,7 +129,6 @@
       </div>
     </div>
 
-    <!-- Step 2 -->
     <div class="step" id="step-2">
       <h2>Langkah 2: Unggah Twibbon (PNG Transparan)</h2>
       <div class="dropzone" id="drop-frame">
@@ -118,13 +138,11 @@
       </div>
     </div>
 
-    <!-- Step 3 -->
     <div class="step" id="step-3">
       <h2>Langkah 3: Atur Posisi Foto</h2>
       <p>Geser dan zoom sebelum menyimpan.</p>
     </div>
 
-    <!-- Step 4 -->
     <div class="step" id="step-4">
       <h2>Langkah 4: Pratinjau & Unduh</h2>
       <canvas id="preview-canvas" width="500" height="500"></canvas><br>
@@ -137,10 +155,13 @@
     </div>
   </div>
 
+  <div id="spinner"><div class="loader"></div></div>
+
   <script>
     const steps = document.querySelectorAll('.step');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
+    const spinner = document.getElementById('spinner');
 
     const photoInput = document.getElementById('upload-photo');
     const frameInput = document.getElementById('upload-frame');
@@ -159,47 +180,33 @@
     let currentStep = 0;
 
     function showStep(i) {
-      steps.forEach((step, idx) => {
-        if (idx === i) {
-          step.classList.add('active');
-        } else {
-          step.classList.remove('active');
-        }
-      });
+      steps[currentStep].classList.remove('active');
+      steps[currentStep].classList.add('left-exit');
+      setTimeout(() => {
+        steps[currentStep].classList.remove('left-exit');
+      }, 500);
 
-      prevBtn.disabled = i === 0;
-      nextBtn.textContent = i === steps.length - 1 ? 'Muat Ulang' : 'Selanjutnya';
+      steps[i].classList.add('active');
 
-      if (i === 3) drawCanvas();
+      currentStep = i;
+      prevBtn.disabled = currentStep === 0;
+      nextBtn.textContent = currentStep === steps.length - 1 ? 'Muat Ulang' : 'Selanjutnya';
+
+      if (currentStep === 3) drawCanvas();
     }
 
     prevBtn.onclick = () => {
-      if (currentStep > 0) {
-        currentStep--;
-        showStep(currentStep);
-      }
+      if (currentStep > 0) showStep(currentStep - 1);
     };
 
     nextBtn.onclick = () => {
-      if (nextBtn.textContent === "Muat Ulang") {
+      if (nextBtn.textContent === 'Muat Ulang') {
         resetApp();
         return;
       }
-
-      if (currentStep === 0 && !photoImage.src) {
-        alert("Silakan unggah foto terlebih dahulu.");
-        return;
-      }
-
-      if (currentStep === 1 && !frameImage.src) {
-        alert("Silakan unggah twibbon PNG terlebih dahulu.");
-        return;
-      }
-
-      if (currentStep < steps.length - 1) {
-        currentStep++;
-        showStep(currentStep);
-      }
+      if (currentStep === 0 && !photoImage.src) return alert("Silakan unggah foto dulu.");
+      if (currentStep === 1 && !frameImage.src) return alert("Silakan unggah twibbon dulu.");
+      if (currentStep < steps.length - 1) showStep(currentStep + 1);
     };
 
     function resetApp() {
@@ -207,20 +214,18 @@
       frameImage = new Image();
       scale = 1;
       pos = { x: 0, y: 0 };
-      currentStep = 0;
-
-      photoPreview.src = "";
-      framePreview.src = "";
-      photoPreview.style.display = "none";
-      framePreview.style.display = "none";
-      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-      photoInput.value = "";
-      frameInput.value = "";
-
-      showStep(currentStep);
+      photoInput.value = '';
+      frameInput.value = '';
+      photoPreview.src = framePreview.src = '';
+      photoPreview.style.display = framePreview.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      showStep(0);
     }
 
-    showStep(currentStep);
+    function showSpinner() {
+      spinner.style.display = 'block';
+      setTimeout(() => spinner.style.display = 'none', 3000); // 3s simulasi loading
+    }
 
     function dropHandler(zone, input, imgTag, imgObj) {
       zone.addEventListener('click', () => input.click());
@@ -229,12 +234,16 @@
         e.preventDefault();
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) {
-          loadImage(file, imgTag, imgObj);
+          showSpinner();
+          setTimeout(() => loadImage(file, imgTag, imgObj), 3000);
         }
       });
       input.addEventListener('change', () => {
         const file = input.files[0];
-        if (file) loadImage(file, imgTag, imgObj);
+        if (file) {
+          showSpinner();
+          setTimeout(() => loadImage(file, imgTag, imgObj), 3000);
+        }
       });
     }
 
@@ -245,7 +254,6 @@
         imgTag.style.display = 'block';
         imgObj.onload = drawCanvas;
         imgObj.src = reader.result;
-
         if (imgObj === photoImage) {
           scale = 1;
           pos = { x: 0, y: 0 };
@@ -253,9 +261,6 @@
       };
       reader.readAsDataURL(file);
     }
-
-    dropHandler(document.getElementById('drop-photo'), photoInput, photoPreview, photoImage);
-    dropHandler(document.getElementById('drop-frame'), frameInput, framePreview, frameImage);
 
     function drawCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -271,11 +276,8 @@
       }
     }
 
-    // Desktop drag & zoom
-    canvas.addEventListener('mousedown', e => {
-      isDragging = true;
-      last = { x: e.offsetX, y: e.offsetY };
-    });
+    // Touch and mouse events
+    canvas.addEventListener('mousedown', e => { isDragging = true; last = { x: e.offsetX, y: e.offsetY }; });
     canvas.addEventListener('mousemove', e => {
       if (isDragging) {
         const dx = e.offsetX - last.x;
@@ -294,7 +296,7 @@
       drawCanvas();
     });
 
-    // Touch support
+    // Touch gestures
     let initialDistance = null;
     canvas.addEventListener('touchstart', e => {
       if (e.touches.length === 2) {
@@ -304,26 +306,21 @@
         last = getTouchPos(canvas, e.touches[0]);
       }
     }, { passive: false });
-
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
       if (e.touches.length === 2 && initialDistance !== null) {
         const newDistance = getDistance(e.touches[0], e.touches[1]);
-        const scaleChange = (newDistance - initialDistance) / 200;
-        scale = Math.max(0.1, scale + scaleChange);
+        scale = Math.max(0.1, scale + (newDistance - initialDistance) / 200);
         initialDistance = newDistance;
         drawCanvas();
       } else if (e.touches.length === 1 && isDragging) {
         const touchPos = getTouchPos(canvas, e.touches[0]);
-        const dx = touchPos.x - last.x;
-        const dy = touchPos.y - last.y;
-        pos.x += dx;
-        pos.y += dy;
+        pos.x += touchPos.x - last.x;
+        pos.y += touchPos.y - last.y;
         last = touchPos;
         drawCanvas();
       }
     }, { passive: false });
-
     canvas.addEventListener('touchend', () => {
       initialDistance = null;
       isDragging = false;
@@ -337,10 +334,7 @@
 
     function getTouchPos(canvas, touch) {
       const rect = canvas.getBoundingClientRect();
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
+      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     }
 
     downloadBtn.onclick = () => {
@@ -350,6 +344,9 @@
       link.href = canvas.toDataURL('image/png');
       link.click();
     };
+
+    dropHandler(document.getElementById('drop-photo'), photoInput, photoPreview, photoImage);
+    dropHandler(document.getElementById('drop-frame'), frameInput, framePreview, frameImage);
   </script>
 </body>
 </html>
