@@ -60,6 +60,7 @@
       border-radius: 8px;
       margin-top: 10px;
       touch-action: none;
+      background-color: #fff;
     }
     .navigation {
       margin-top: 30px;
@@ -174,6 +175,7 @@
       steps[currentStep].classList.add('active');
       prevBtn.disabled = currentStep === 0;
       nextBtn.textContent = currentStep === steps.length - 1 ? 'Muat Ulang' : 'Selanjutnya';
+      drawCanvas();
     }
 
     prevBtn.onclick = () => {
@@ -212,14 +214,21 @@
     function drawCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (photoImage.complete && photoImage.src) {
-        const w = canvas.width * scale;
-        const h = canvas.height * scale;
+        const ratio = Math.min(canvas.width / photoImage.width, canvas.height / photoImage.height);
+        const w = photoImage.width * scale * ratio;
+        const h = photoImage.height * scale * ratio;
         const x = (canvas.width - w) / 2 + pos.x;
         const y = (canvas.height - h) / 2 + pos.y;
         ctx.drawImage(photoImage, x, y, w, h);
       }
       if (frameImage.complete && frameImage.src) {
+        if (currentStep === 3) {
+          ctx.globalAlpha = 0.5; // transparan saat edit
+        } else {
+          ctx.globalAlpha = 1; // full opacity saat download
+        }
         ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
       }
     }
 
@@ -261,7 +270,7 @@
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
       scale += (e.deltaY < 0 ? 0.05 : -0.05);
-      scale = Math.max(0.1, Math.min(scale, 3));
+      scale = Math.max(0.1, Math.min(scale, 10));
       drawCanvas();
     });
 
@@ -285,7 +294,7 @@
       } else if (e.touches.length === 2 && initialDistance) {
         const newDist = getDistance(e.touches);
         scale *= newDist / initialDistance;
-        scale = Math.max(0.1, Math.min(scale, 3));
+        scale = Math.max(0.1, Math.min(scale, 10));
         initialDistance = newDist;
         drawCanvas();
       }
