@@ -6,6 +6,7 @@ const nextBtn = document.getElementById("next-btn");
 const downloadBtn = document.getElementById("download-btn");
 const countdown = document.getElementById("countdown");
 const spinner = document.getElementById("spinner");
+const notification = document.getElementById("notification");
 
 const photoPreview = document.getElementById("photo-preview");
 const framePreview = document.getElementById("frame-preview");
@@ -27,6 +28,12 @@ let initialDistance = null;
 let isInteracting = false;
 let interactionTimeout = null;
 
+function showNotification(message) {
+  notification.textContent = message;
+  notification.classList.add("show");
+  setTimeout(() => notification.classList.remove("show"), 3000);
+}
+
 function updateSteps() {
   steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
   prevBtn.disabled = currentStep === 0;
@@ -46,8 +53,8 @@ prevBtn.addEventListener("click", () => {
 
 nextBtn.addEventListener("click", () => {
   if (nextBtn.textContent === "Muat Ulang") return location.reload();
-  if (currentStep === 0 && !photoImage.src) return alert("Unggah foto terlebih dahulu!");
-  if (currentStep === 1 && !frameImage.src) return alert("Unggah twibbon terlebih dahulu!");
+  if (currentStep === 0 && !photoImage.src) return showNotification("Unggah foto terlebih dahulu!");
+  if (currentStep === 1 && !frameImage.src) return showNotification("Unggah twibbon terlebih dahulu!");
   if (currentStep < steps.length - 1) {
     currentStep++;
     updateSteps();
@@ -83,7 +90,7 @@ function loadImage(file, imageEl, previewEl, checkTransparency = false) {
   reader.onload = () => {
     imageEl.onload = () => {
       if (checkTransparency && !hasTransparency(imageEl)) {
-        alert("Twibbon harus berupa file PNG dengan latar belakang transparan!");
+        showNotification("Twibbon harus berupa file PNG dengan latar belakang transparan!");
         frameInput.value = "";
         framePreview.style.display = "none";
         frameImage.src = "";
