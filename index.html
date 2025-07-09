@@ -151,8 +151,7 @@
   <div id="spinner"><div class="loader"></div></div>
 
   <script>
-    // Script akan ditambahkan ulang sesuai tampilan dan logika sebelumnya
-    // script.js
+// script.js
 let currentStep = 0;
 const steps = document.querySelectorAll(".step");
 const prevBtn = document.getElementById("prev-btn");
@@ -209,20 +208,28 @@ nextBtn.addEventListener("click", () => {
 });
 
 document.getElementById("drop-photo").addEventListener("click", () => photoInput.click());
-photoInput.addEventListener("change", e => loadImage(e.target.files[0], photoImage, photoPreview));
+photoInput.addEventListener("change", e => delayedLoadImage(e.target.files[0], photoImage, photoPreview));
 document.getElementById("drop-photo").addEventListener("drop", e => {
   e.preventDefault();
-  loadImage(e.dataTransfer.files[0], photoImage, photoPreview);
+  delayedLoadImage(e.dataTransfer.files[0], photoImage, photoPreview);
 });
 document.getElementById("drop-photo").addEventListener("dragover", e => e.preventDefault());
 
 document.getElementById("drop-frame").addEventListener("click", () => frameInput.click());
-frameInput.addEventListener("change", e => loadImage(e.target.files[0], frameImage, framePreview));
+frameInput.addEventListener("change", e => delayedLoadImage(e.target.files[0], frameImage, framePreview));
 document.getElementById("drop-frame").addEventListener("drop", e => {
   e.preventDefault();
-  loadImage(e.dataTransfer.files[0], frameImage, framePreview);
+  delayedLoadImage(e.dataTransfer.files[0], frameImage, framePreview);
 });
 document.getElementById("drop-frame").addEventListener("dragover", e => e.preventDefault());
+
+function delayedLoadImage(file, imageEl, previewEl) {
+  spinner.style.display = "block";
+  setTimeout(() => {
+    loadImage(file, imageEl, previewEl);
+    spinner.style.display = "none";
+  }, 3000);
+}
 
 function loadImage(file, imageEl, previewEl) {
   const reader = new FileReader();
