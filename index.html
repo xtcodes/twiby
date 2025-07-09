@@ -19,12 +19,24 @@
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
     }
     .step {
-      display: none;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(30px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      position: absolute;
+      width: 100%;
+      left: 0;
+      top: 0;
     }
     .step.active {
-      display: block;
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+      position: relative;
     }
     .dropzone {
       border: 2px dashed #aaa;
@@ -147,9 +159,17 @@
     let currentStep = 0;
 
     function showStep(i) {
-      steps.forEach((s, idx) => s.classList.toggle('active', idx === i));
+      steps.forEach((step, idx) => {
+        if (idx === i) {
+          step.classList.add('active');
+        } else {
+          step.classList.remove('active');
+        }
+      });
+
       prevBtn.disabled = i === 0;
       nextBtn.textContent = i === steps.length - 1 ? 'Muat Ulang' : 'Selanjutnya';
+
       if (i === 3) drawCanvas();
     }
 
@@ -182,8 +202,6 @@
       }
     };
 
-    showStep(currentStep);
-
     function resetApp() {
       photoImage = new Image();
       frameImage = new Image();
@@ -201,6 +219,8 @@
 
       showStep(currentStep);
     }
+
+    showStep(currentStep);
 
     function dropHandler(zone, input, imgTag, imgObj) {
       zone.addEventListener('click', () => input.click());
@@ -251,7 +271,7 @@
       }
     }
 
-    // Desktop drag
+    // Desktop drag & zoom
     canvas.addEventListener('mousedown', e => {
       isDragging = true;
       last = { x: e.offsetX, y: e.offsetY };
