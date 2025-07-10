@@ -42,7 +42,7 @@ function updateSteps() {
   if (currentStep === 3) {
     finalCanvas.width = 1080;
     finalCanvas.height = 1080;
-    drawCanvas(finalCtx, finalCanvas, false, true); // include watermark here
+    drawCanvas(finalCtx, finalCanvas, false, true);
   }
 }
 
@@ -148,7 +148,7 @@ function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracti
     ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
     ctxDraw.textAlign = "right";
     ctxDraw.textBaseline = "bottom";
-    ctxDraw.fillText("@TwibbonApp", canvasRef.width - 20, canvasRef.height - 20);
+    ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
   }
 }
 
@@ -213,6 +213,7 @@ function startInteraction() {
   drawCanvas();
   clearTimeout(interactionTimeout);
 }
+
 function endInteraction() {
   clearTimeout(interactionTimeout);
   interactionTimeout = setTimeout(() => {
@@ -226,6 +227,7 @@ canvas.addEventListener("mousedown", e => {
   lastTouch = { x: e.offsetX, y: e.offsetY };
   startInteraction();
 });
+
 canvas.addEventListener("mousemove", e => {
   if (isDragging) {
     const dx = e.offsetX - lastTouch.x;
@@ -236,6 +238,7 @@ canvas.addEventListener("mousemove", e => {
     drawCanvas();
   }
 });
+
 canvas.addEventListener("mouseup", () => { isDragging = false; endInteraction(); });
 canvas.addEventListener("mouseleave", () => { isDragging = false; endInteraction(); });
 
