@@ -42,7 +42,7 @@ function updateSteps() {
   if (currentStep === 3) {
     finalCanvas.width = 1080;
     finalCanvas.height = 1080;
-    drawCanvas(finalCtx, finalCanvas, false);
+    drawCanvas(finalCtx, finalCanvas, false, true); // include watermark here
   }
 }
 
@@ -122,25 +122,33 @@ function hasTransparency(img) {
 
 function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracting, withWatermark = false) {
   ctxDraw.clearRect(0, 0, canvasRef.width, canvasRef.height);
+
   if (photoImage.src) {
     const ratio = Math.min(canvasRef.width / photoImage.width, canvasRef.height / photoImage.height);
+    const baseRatio = Math.min(canvas.width / photoImage.width, canvas.height / photoImage.height);
+    const scaleCorrection = ratio / baseRatio;
+
     const drawWidth = photoImage.width * scale * ratio;
     const drawHeight = photoImage.height * scale * ratio;
-    const offsetX = (canvasRef.width - drawWidth) / 2 + position.x;
-    const offsetY = (canvasRef.height - drawHeight) / 2 + position.y;
+
+    const offsetX = (canvasRef.width - drawWidth) / 2 + position.x * scaleCorrection;
+    const offsetY = (canvasRef.height - drawHeight) / 2 + position.y * scaleCorrection;
+
     ctxDraw.drawImage(photoImage, offsetX, offsetY, drawWidth, drawHeight);
   }
+
   if (frameImage.src) {
     ctxDraw.globalAlpha = transparent ? 0.5 : 1.0;
     ctxDraw.drawImage(frameImage, 0, 0, canvasRef.width, canvasRef.height);
     ctxDraw.globalAlpha = 1.0;
   }
+
   if (withWatermark) {
     ctxDraw.fillStyle = "white";
     ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
     ctxDraw.textAlign = "right";
     ctxDraw.textBaseline = "bottom";
-    ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
+    ctxDraw.fillText("@TwibbonApp", canvasRef.width - 20, canvasRef.height - 20);
   }
 }
 
