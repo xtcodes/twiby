@@ -1,3 +1,4 @@
+// script.js
 let currentStep = 0;
 const steps = document.querySelectorAll(".step");
 const prevBtn = document.getElementById("prev-btn");
@@ -42,7 +43,7 @@ function updateSteps() {
   if (currentStep === 3) {
     finalCanvas.width = 1080;
     finalCanvas.height = 1080;
-    drawCanvas(finalCtx, finalCanvas, false, true);
+    drawCanvas(finalCtx, finalCanvas, false, false);
   }
 }
 
@@ -122,27 +123,21 @@ function hasTransparency(img) {
 
 function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracting, withWatermark = false) {
   ctxDraw.clearRect(0, 0, canvasRef.width, canvasRef.height);
-
   if (photoImage.src) {
     const ratio = Math.min(canvasRef.width / photoImage.width, canvasRef.height / photoImage.height);
     const baseRatio = Math.min(canvas.width / photoImage.width, canvas.height / photoImage.height);
     const scaleCorrection = ratio / baseRatio;
-
     const drawWidth = photoImage.width * scale * ratio;
     const drawHeight = photoImage.height * scale * ratio;
-
     const offsetX = (canvasRef.width - drawWidth) / 2 + position.x * scaleCorrection;
     const offsetY = (canvasRef.height - drawHeight) / 2 + position.y * scaleCorrection;
-
     ctxDraw.drawImage(photoImage, offsetX, offsetY, drawWidth, drawHeight);
   }
-
   if (frameImage.src) {
     ctxDraw.globalAlpha = transparent ? 0.5 : 1.0;
     ctxDraw.drawImage(frameImage, 0, 0, canvasRef.width, canvasRef.height);
     ctxDraw.globalAlpha = 1.0;
   }
-
   if (withWatermark) {
     ctxDraw.fillStyle = "white";
     ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
@@ -213,7 +208,6 @@ function startInteraction() {
   drawCanvas();
   clearTimeout(interactionTimeout);
 }
-
 function endInteraction() {
   clearTimeout(interactionTimeout);
   interactionTimeout = setTimeout(() => {
@@ -227,7 +221,6 @@ canvas.addEventListener("mousedown", e => {
   lastTouch = { x: e.offsetX, y: e.offsetY };
   startInteraction();
 });
-
 canvas.addEventListener("mousemove", e => {
   if (isDragging) {
     const dx = e.offsetX - lastTouch.x;
@@ -238,7 +231,6 @@ canvas.addEventListener("mousemove", e => {
     drawCanvas();
   }
 });
-
 canvas.addEventListener("mouseup", () => { isDragging = false; endInteraction(); });
 canvas.addEventListener("mouseleave", () => { isDragging = false; endInteraction(); });
 
