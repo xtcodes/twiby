@@ -4,6 +4,7 @@ const steps = document.querySelectorAll(".step");
 const prevBtn = document.getElementById("prev-btn");
 const nextBtn = document.getElementById("next-btn");
 const downloadBtn = document.getElementById("download-btn");
+const shareBtn = document.getElementById("share-btn");
 const countdown = document.getElementById("countdown");
 const spinner = document.getElementById("spinner");
 const notification = document.getElementById("notification");
@@ -149,12 +150,35 @@ downloadBtn.addEventListener("click", () => {
       spinner.style.display = "none";
       countdown.style.display = "none";
 
+      const dataUrl = finalCanvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.download = "twibbon.png";
-      link.href = finalCanvas.toDataURL();
+      link.href = dataUrl;
       link.click();
+
+      downloadBtn.style.display = "none";
+      shareBtn.style.display = "inline-block";
     }
   }, 1000);
+});
+
+shareBtn.addEventListener("click", async () => {
+  try {
+    finalCanvas.toBlob(async (blob) => {
+      const file = new File([blob], "twibbon.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Bagikan Twibbon",
+          text: "Lihat hasil twibbon saya!",
+          files: [file]
+        });
+      } else {
+        showNotification("Perangkat tidak mendukung Web Share API dengan file.");
+      }
+    });
+  } catch (err) {
+    showNotification("Gagal membagikan gambar.");
+  }
 });
 
 function startInteraction() {
