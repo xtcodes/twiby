@@ -1,4 +1,3 @@
-// script.js
 let currentStep = 0;
 const steps = document.querySelectorAll(".step");
 const prevBtn = document.getElementById("prev-btn");
@@ -121,7 +120,7 @@ function hasTransparency(img) {
   return false;
 }
 
-function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracting) {
+function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracting, withWatermark = false) {
   ctxDraw.clearRect(0, 0, canvasRef.width, canvasRef.height);
   if (photoImage.src) {
     const ratio = Math.min(canvasRef.width / photoImage.width, canvasRef.height / photoImage.height);
@@ -136,12 +135,13 @@ function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracti
     ctxDraw.drawImage(frameImage, 0, 0, canvasRef.width, canvasRef.height);
     ctxDraw.globalAlpha = 1.0;
   }
-  // Tambahkan watermark putih di kanan bawah
-  ctxDraw.fillStyle = "white";
-  ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
-  ctxDraw.textAlign = "right";
-  ctxDraw.textBaseline = "bottom";
-  ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
+  if (withWatermark) {
+    ctxDraw.fillStyle = "white";
+    ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
+    ctxDraw.textAlign = "right";
+    ctxDraw.textBaseline = "bottom";
+    ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
+  }
 }
 
 downloadBtn.addEventListener("click", () => {
@@ -162,7 +162,7 @@ downloadBtn.addEventListener("click", () => {
       hdCanvas.width = 1080;
       hdCanvas.height = 1080;
       const hdCtx = hdCanvas.getContext("2d");
-      drawCanvas(hdCtx, hdCanvas, false);
+      drawCanvas(hdCtx, hdCanvas, false, true);
 
       const link = document.createElement("a");
       link.download = "twibbon-hd.png";
@@ -181,7 +181,7 @@ shareBtn.addEventListener("click", async () => {
     hdCanvas.width = 1080;
     hdCanvas.height = 1080;
     const hdCtx = hdCanvas.getContext("2d");
-    drawCanvas(hdCtx, hdCanvas, false);
+    drawCanvas(hdCtx, hdCanvas, false, true);
 
     hdCanvas.toBlob(async (blob) => {
       const file = new File([blob], "twibbon.png", { type: "image/png" });
