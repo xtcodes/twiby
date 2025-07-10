@@ -41,6 +41,8 @@ function updateSteps() {
   nextBtn.textContent = currentStep === steps.length - 1 ? "Muat Ulang" : "Selanjutnya";
 
   if (currentStep === 3) {
+    finalCanvas.width = 1080;
+    finalCanvas.height = 1080;
     drawCanvas(finalCtx, finalCanvas, false);
   }
 }
@@ -150,10 +152,15 @@ downloadBtn.addEventListener("click", () => {
       spinner.style.display = "none";
       countdown.style.display = "none";
 
-      const dataUrl = finalCanvas.toDataURL("image/png");
+      const hdCanvas = document.createElement("canvas");
+      hdCanvas.width = 1080;
+      hdCanvas.height = 1080;
+      const hdCtx = hdCanvas.getContext("2d");
+      drawCanvas(hdCtx, hdCanvas, false);
+
       const link = document.createElement("a");
-      link.download = "twibbon.png";
-      link.href = dataUrl;
+      link.download = "twibbon-hd.png";
+      link.href = hdCanvas.toDataURL();
       link.click();
 
       downloadBtn.style.display = "none";
@@ -164,7 +171,13 @@ downloadBtn.addEventListener("click", () => {
 
 shareBtn.addEventListener("click", async () => {
   try {
-    finalCanvas.toBlob(async (blob) => {
+    const hdCanvas = document.createElement("canvas");
+    hdCanvas.width = 1080;
+    hdCanvas.height = 1080;
+    const hdCtx = hdCanvas.getContext("2d");
+    drawCanvas(hdCtx, hdCanvas, false);
+
+    hdCanvas.toBlob(async (blob) => {
       const file = new File([blob], "twibbon.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
