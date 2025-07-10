@@ -79,6 +79,10 @@
       background-color: #ccc;
       cursor: not-allowed;
     }
+    .dl {
+      background-color: #04AA6D; /* Green */
+      color: white;
+    }
     #spinner {
       position: fixed;
       top: 50%;
@@ -159,9 +163,11 @@
 
     <div class="step" id="step-4">
       <h2>Langkah 4: Pratinjau & Unduh</h2>
-      <canvas id="preview-canvas-final" width="500" height="500"></canvas><br>
-      <button id="download-btn">Unduh Hasil</button>
+      <p><canvas id="preview-canvas-final" width="500" height="500"></canvas></p>
+      <div class="navigation">
+      <button class="dl" id="download-btn">Unduh Hasil</button>
       <button id="share-btn" style="display:none">Bagikan</button>
+      </div>
 
       <div id="countdown">Mohon tunggu...</div>
     </div>
