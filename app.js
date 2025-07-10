@@ -136,6 +136,12 @@ function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracti
     ctxDraw.drawImage(frameImage, 0, 0, canvasRef.width, canvasRef.height);
     ctxDraw.globalAlpha = 1.0;
   }
+  // Tambahkan watermark putih di kanan bawah
+  ctxDraw.fillStyle = "white";
+  ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
+  ctxDraw.textAlign = "right";
+  ctxDraw.textBaseline = "bottom";
+  ctxDraw.fillText("@TwibbonApp", canvasRef.width - 20, canvasRef.height - 20);
 }
 
 downloadBtn.addEventListener("click", () => {
