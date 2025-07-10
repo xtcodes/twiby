@@ -80,6 +80,7 @@
       cursor: not-allowed;
     }
     .dl {
+      width: 100%;
       padding: 10px 20px;
       font-size: 16px;
       margin: 0 10px;
@@ -93,6 +94,21 @@
       background-color: #ccc;
       cursor: not-allowed;
     }
+    .share {
+      width: 100%;
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 0 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: #04AA6D;
+      color: white;
+      cursor: pointer;
+    }
+    .share:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      }
     #spinner {
       position: fixed;
       top: 50%;
@@ -176,7 +192,7 @@
       <p><canvas id="preview-canvas-final" width="500" height="500"></canvas></p>
       <p>
       <button class="dl" id="download-btn">Unduh Hasil</button>
-      <button id="share-btn" style="display:none">Bagikan</button>
+      <button class="share" id="share-btn" style="display:none">Bagikan ke Media Sosial</button>
       </p>
 
       <div id="countdown">Mohon tunggu...</div>
