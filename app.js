@@ -148,7 +148,7 @@ function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracti
     ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
     ctxDraw.textAlign = "right";
     ctxDraw.textBaseline = "bottom";
-    ctxDraw.fillText("@TwibbonApp", canvasRef.width - 20, canvasRef.height - 20);
+    ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
   }
 }
 
