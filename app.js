@@ -30,9 +30,9 @@ let isInteracting = false;
 let interactionTimeout = null;
 
 // Set placeholder awal
-photoPreview.src = "https://placehold.co/512x512?text=Unggah+Foto&font=roboto";
+photoPreview.src = "placeholder-foto.png";
 photoPreview.style.display = "block";
-framePreview.src = "https://placehold.co/512x512?text=Unggah+Twibbon&font=roboto";
+framePreview.src = "placeholder-twibbon.png";
 framePreview.style.display = "block";
 
 function showNotification(message) {
@@ -101,7 +101,7 @@ function loadImage(file, imageEl, previewEl, checkTransparency = false) {
       if (checkTransparency && !hasTransparency(imageEl)) {
         showNotification("Twibbon harus berupa file PNG dengan latar belakang transparan!");
         frameInput.value = "";
-        framePreview.src = "placeholder-frame.png";
+        framePreview.src = "placeholder-twibbon.png";
         return;
       }
       previewEl.src = reader.result;
