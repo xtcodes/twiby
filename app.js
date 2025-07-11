@@ -30,9 +30,9 @@ let isInteracting = false;
 let interactionTimeout = null;
 
 // Set placeholder awal
-photoPreview.src = "placeholder-photo.png";
+photoPreview.src = "https://placehold.co/512x512?text=Unggah+Foto&font=roboto";
 photoPreview.style.display = "block";
-framePreview.src = "placeholder-frame.png";
+framePreview.src = "https://placehold.co/512x512?text=Unggah+Twibbon&font=roboto";
 framePreview.style.display = "block";
 
 function showNotification(message) {
