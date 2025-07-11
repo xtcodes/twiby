@@ -29,6 +29,12 @@ let initialDistance = null;
 let isInteracting = false;
 let interactionTimeout = null;
 
+// Set placeholder awal
+photoPreview.src = "placeholder-photo.png";
+photoPreview.style.display = "block";
+framePreview.src = "placeholder-frame.png";
+framePreview.style.display = "block";
+
 function showNotification(message) {
   notification.textContent = message;
   notification.classList.add("show");
@@ -95,8 +101,7 @@ function loadImage(file, imageEl, previewEl, checkTransparency = false) {
       if (checkTransparency && !hasTransparency(imageEl)) {
         showNotification("Twibbon harus berupa file PNG dengan latar belakang transparan!");
         frameInput.value = "";
-        framePreview.style.display = "none";
-        frameImage.src = "";
+        framePreview.src = "placeholder-frame.png";
         return;
       }
       previewEl.src = reader.result;
@@ -143,7 +148,7 @@ function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracti
     ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
     ctxDraw.textAlign = "right";
     ctxDraw.textBaseline = "bottom";
-    ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
+    ctxDraw.fillText("@TwibbonApp", canvasRef.width - 20, canvasRef.height - 20);
   }
 }
 
