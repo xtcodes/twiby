@@ -208,6 +208,13 @@ shareBtn.addEventListener("click", async () => {
   }
 });
 
+window.addEventListener("beforeunload", function (e) {
+  if (unsavedChanges) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
 function startInteraction() {
   isInteracting = true;
   drawCanvas();
