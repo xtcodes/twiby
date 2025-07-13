@@ -223,12 +223,11 @@ function hasTransparency(img) {
 function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracting, showWatermark = false) {
   ctxDraw.clearRect(0, 0, canvasRef.width, canvasRef.height);
   if (photoImage.src) {
-    const ratio = Math.min(canvasRef.width / photoImage.width, canvasRef.height / photoImage.height);
-    const drawWidth = photoImage.width * scale * ratio;
-    const drawHeight = photoImage.height * scale * ratio;
-    const offsetX = (canvasRef.width - drawWidth) / 2 + position.x;
-    const offsetY = (canvasRef.height - drawHeight) / 2 + position.y;
-    ctxDraw.drawImage(photoImage, offsetX, offsetY, drawWidth, drawHeight);
+    const drawWidth = photoImage.width * scale;
+  const drawHeight = photoImage.height * scale;
+  const offsetX = (canvasRef.width - drawWidth) / 2 + position.x;
+  const offsetY = (canvasRef.height - drawHeight) / 2 + position.y;
+  ctxDraw.drawImage(photoImage, offsetX, offsetY, drawWidth, drawHeight);
   }
   if (frameImage.src) {
     ctxDraw.globalAlpha = transparent ? 0.5 : 1.0;
