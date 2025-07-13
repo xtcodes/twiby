@@ -252,7 +252,15 @@
 
   <div id="spinner"><div class="loader"></div></div>
   <div id="notification" class="notification"></div>
-
+  <div id="exit-dialog" class="exit-dialog hidden">
+    <div class="dialog-content">
+      <p>Apakah kamu yakin ingin keluar tanpa menyimpan hasil Twibbon?</p>
+      <div class="dialog-buttons">
+        <button id="cancel-exit">Batal</button>
+        <button id="confirm-exit">Keluar</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
   <script>
@@ -262,7 +270,32 @@
       .then(reg => console.log('Service Worker registered', reg))
       .catch(err => console.error('SW registration failed', err));
   });
-}
   </script>
+
+    <script>
+    const exitDialog = document.getElementById("exit-dialog");
+    const cancelExitBtn = document.getElementById("cancel-exit");
+    const confirmExitBtn = document.getElementById("confirm-exit");
+    let shouldExit = false;
+
+    window.addEventListener("beforeunload", function (e) {
+      if (typeof unsavedChanges !== 'undefined' && unsavedChanges && !shouldExit) {
+        e.preventDefault();
+        e.returnValue = "";
+        exitDialog.classList.remove("hidden");
+        return "";
+      }
+    });
+
+    confirmExitBtn.addEventListener("click", () => {
+      shouldExit = true;
+      exitDialog.classList.add("hidden");
+      window.location.href = "about:blank";
+    });
+
+    cancelExitBtn.addEventListener("click", () => {
+      exitDialog.classList.add("hidden");
+    });
+      </script>
 </body>
 </html>
