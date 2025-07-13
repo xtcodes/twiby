@@ -126,7 +126,7 @@ let lastTouch = {};
 let initialDistance = null;
 let isInteracting = false;
 let interactionTimeout = null;
-let unsavedChanges = true;
+let unsavedChanges = false;
 
 function showNotification(message) {
   notification.textContent = message;
@@ -198,6 +198,7 @@ function loadImage(file, imageEl, previewEl, checkTransparency = false) {
         return;
       }
       previewEl.src = reader.result;
+      unsavedChanges = true;
       previewEl.style.display = "block";
       drawCanvas();
     };
