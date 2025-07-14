@@ -3,144 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon-192.png">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <title>Aplikasi Twibbon</title>
+  <title>Twibbon App</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f3f3f3;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    .step { display: none; }
-    .step.active { display: block; margin: 20px; }
-    canvas { max-width: 90%; background: #fff; border: 1px solid #ccc; }
-    .buttons { margin-top: 20px; }
-    #spinner, #countdown, #notification, #share-btn { display: none; }
-    #spinner {
-      margin: 10px auto;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #000;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    #notification.show {
-      display: block;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-    }
-    .drop-zone {
-      border: 2px dashed #aaa;
-      padding: 20px;
-      cursor: pointer;
-      background: #eee;
-      position: relative;
-    }
-    .drop-zone img {
-      max-width: 100px;
-      display: none;
-    }
-    .exit-dialog {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.75);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9999;
-    }
-    .exit-dialog .dialog-content {
-      background: #222; color: white;
-      padding: 20px 30px;
-      border-radius: 10px;
-      text-align: center;
-      max-width: 300px;
-    }
-    .exit-dialog .dialog-buttons {
-      margin-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .exit-dialog button {
-      padding: 10px 20px;
-      background: white;
-      color: black;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    .exit-dialog.hidden { display: none; }
+    body { font-family: sans-serif; margin: 0; padding: 0; text-align: center; background: #f0f0f0; }
+    .step { display: none; padding: 20px; }
+    .step.active { display: block; }
+    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+    #preview-canvas, #preview-canvas-final { width: 100%; max-width: 400px; background: #fff; touch-action: none; }
+    .controls { margin: 20px 0; }
+    #spinner { display: none; }
+    #notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 8px; display: none; z-index: 9999; }
+    #notification.show { display: block; }
+    #countdown { margin-top: 10px; font-weight: bold; }
+    .upload-area { border: 2px dashed #ccc; padding: 40px; margin: 10px auto; cursor: pointer; width: 80%; max-width: 300px; background: #fafafa; }
+    .upload-area img { width: 100%; display: none; }
+    .upload-area.placeholder::before { content: '\1F4F7\A Unggah Foto'; white-space: pre; display: block; color: #888; font-size: 18px; }
+    #download-btn, #share-btn { display: inline-block; }
+    #share-btn { display: none; }
   </style>
 </head>
 <body>
-  <h1>Aplikasi Twibbon</h1>
-
+  <div id="notification"></div>
+  <div id="spinner">⏳ Memuat...</div>
   <div class="step active">
     <h2>Langkah 1: Unggah Foto</h2>
-    <div id="drop-photo" class="drop-zone">
-      <p>Klik atau seret foto ke sini</p>
-      <img id="photo-preview" alt="Pratinjau Foto" />
-    </div>
+    <div id="drop-photo" class="upload-area placeholder"></div>
     <input type="file" id="upload-photo" accept="image/*" hidden />
+    <img id="photo-preview" />
   </div>
-
   <div class="step">
     <h2>Langkah 2: Unggah Twibbon (PNG Transparan)</h2>
-    <div id="drop-frame" class="drop-zone">
-      <p>Klik atau seret twibbon ke sini</p>
-      <img id="frame-preview" alt="Pratinjau Twibbon" />
-    </div>
+    <div id="drop-frame" class="upload-area placeholder"></div>
     <input type="file" id="upload-frame" accept="image/png" hidden />
+    <img id="frame-preview" />
   </div>
-
   <div class="step">
-    <h2>Langkah 3: Atur Posisi Foto</h2>
+    <h2>Langkah 3: Atur Posisi & Zoom</h2>
     <canvas id="preview-canvas" width="500" height="500"></canvas>
   </div>
-
   <div class="step">
     <h2>Langkah 4: Pratinjau & Unduh</h2>
     <canvas id="preview-canvas-final" width="500" height="500"></canvas>
-    <div id="spinner"></div>
     <div id="countdown"></div>
-    <button id="download-btn">Unduh</button>
-    <button id="share-btn">Bagikan</button>
+    <div class="controls">
+      <button id="download-btn">Unduh Hasil</button>
+      <button id="share-btn">Bagikan</button>
+    </div>
   </div>
-
-  <div class="buttons">
+  <div class="controls">
     <button id="prev-btn">Sebelumnya</button>
     <button id="next-btn">Selanjutnya</button>
   </div>
-
-  <div id="notification"></div>
-
-  <div id="exit-dialog" class="exit-dialog hidden">
-    <div class="dialog-content">
-      <p>Apakah kamu yakin ingin keluar tanpa menyimpan hasil Twibbon?</p>
-      <div class="dialog-buttons">
-        <button id="cancel-exit">Batal</button>
-        <button id="confirm-exit">Keluar</button>
-      </div>
-    </div>
-  </div>
-
   <script src="demo.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('Service Worker registered:', reg))
-          .catch(err => console.log('Service Worker registration failed:', err));
-      });
-    }
-  </script>
 </body>
 </html>
