@@ -3,299 +3,83 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="manifest.json">
-
-  <title>Twibbon Drag & Drop</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f3f3;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-      overflow: hidden;
-      height: 100%;
-    }
-    .container {
-      width: 600px;
-      margin: 20px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      position: relative;
-      overflow: hidden;
-    }
-    .step {
-      display: none;
-    }
-    .step.active {
-      display: block;
-    }
-    .dropzone {
-      border: 2px dashed #aaa;
-      padding: 30px;
-      border-radius: 10px;
-      background: #fafafa;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    .square-preview {
-      width: 100%;
-      padding-top: 100%;
-      position: relative;
-      background: #eee;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    .square-preview img {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    canvas {
-      width: 100%;
-      max-width: 500px;
-      aspect-ratio: 1 / 1;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-top: 10px;
-      touch-action: none;
-      background-color: #fff;
-    }
-    .navigation {
-      margin-top: 30px;
-    }
-    .navigation button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 0 10px;
-      border: none;
-      border-radius: 6px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-    .navigation button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    .dl {
-      width: 100%;
-      padding: 10px 20px;
-      font-size: 16px;
-     /* margin: 0 10px; */
-      border: none;
-      border-radius: 6px;
-      background-color: #04AA6D;
-      color: white;
-      cursor: pointer;
-    }
-    .dl:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    .share {
-      width: 100%;
-      padding: 10px 20px;
-      font-size: 16px;
-   /*   margin: 0 10px; */
-      border: none;
-      border-radius: 6px;
-      background-color: #555555;
-      color: white;
-      cursor: pointer;
-    }
-    .share:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-      }
-    #spinner {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 999;
-      display: none;
-    }
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    #countdown {
-      font-size: 14px;
-      margin-top: 8px;
-      color: #888;
-      display: none;
-    }
-    .notification {
-      max-width: 200px;
-      font-size: 16px;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 8px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      z-index: 9999;
-    }
-    .notification.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .exit-dialog {
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%; 
-      background: rgba(0,0,0,0.75);
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      z-index: 9999;
-    }
-    .exit-dialog .dialog-content {
-      background: #222; 
-      color: white; 
-      padding: 20px 30px; 
-      border-radius: 10px;
-      text-align: center; 
-      max-width: 300px;
-    }
-    .exit-dialog .dialog-buttons { 
-      margin-top: 20px; 
-      display: flex; 
-      justify-content: space-between; 
-      gap: 10px; 
-    }
-    .exit-dialog button {
-      padding: 10px 20px; 
-      background: white; 
-      color: black; 
-      border: none; 
-      cursor: pointer; 
-      border-radius: 5px;
-    }
-    .exit-dialog.hidden { 
-      display: none; 
-    }
-    @media (max-width: 700px) {
-      .container {
-        margin: 0 auto;
-        width: auto;
-      }
-    }
-  </style>
+  <title>Twibbon Sederhana</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="container">
-    <h1>Twibbon Drag & Drop</h1>
+<body class="bg-gray-100 flex flex-col items-center p-4 space-y-4">
+  <h1 class="text-2xl font-bold">Twibbon Sederhana</h1>
 
-    <div class="step active" id="step-1">
-      <h2>Langkah 1: Unggah Foto</h2>
-      <div class="dropzone" id="drop-photo">
-        <p>Seret foto ke sini atau klik untuk pilih</p>
-        <div class="square-preview"><img id="photo-preview" style="display: none;" /></div>
-        <input type="file" id="upload-photo" accept="image/*" style="display: none;" />
-      </div>
-    </div>
+  <!-- Canvas Preview -->
+  <canvas id="previewCanvas" width="500" height="500" class="border rounded shadow-md"></canvas>
 
-    <div class="step" id="step-2">
-      <h2>Langkah 2: Unggah Twibbon</h2>
-      <div class="dropzone" id="drop-frame">
-        <p>Seret twibbon ke sini atau klik untuk pilih</p>
-        <div class="square-preview"><img id="frame-preview" style="display: none;" /></div>
-        <input type="file" id="upload-frame" accept="image/png" style="display: none;" />
-      </div>
-    </div>
+  <!-- Upload Input -->
+  <input type="file" id="uploadInput" accept="image/*" class="mt-2" />
 
-    <div class="step" id="step-3">
-      <h2>Langkah 3: Atur Posisi Foto</h2>
-      <p>Geser dan zoom sebelum menyimpan.</p>
-      <p><canvas id="preview-canvas" width="500" height="500"></canvas></p>
-    </div>
-
-    <div class="step" id="step-4">
-      <h2>Langkah 4: Pratinjau & Unduh</h2>
-      <p><canvas id="preview-canvas-final" width="500" height="500"></canvas></p>
-      <p>
-      <button class="dl" id="download-btn">Unduh Hasil</button>
-      <button class="share" id="share-btn" style="display:none">Bagikan ke Media Sosial</button>
-      </p>
-
-      <div id="countdown">Mohon tunggu...</div>
-    </div>
-
-    <div class="navigation">
-      <button id="prev-btn" disabled>Sebelumnya</button>
-      <button id="next-btn">Selanjutnya</button>
-    </div>
+  <!-- Buttons -->
+  <div class="space-x-2 mt-4">
+    <button id="downloadBtn" disabled class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50">Unduh Hasil</button>
+    <button id="shareBtn" disabled class="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50">Bagikan</button>
   </div>
 
-  <div id="spinner"><div class="loader"></div></div>
-  <div id="notification" class="notification"></div>
-  <div id="exit-dialog" class="exit-dialog hidden">
-    <div class="dialog-content">
-      <p>Apakah kamu yakin ingin keluar tanpa menyimpan hasil Twibbon?</p>
-      <div class="dialog-buttons">
-        <button id="cancel-exit">Batal</button>
-        <button id="confirm-exit">Keluar</button>
-      </div>
-    </div>
-  </div>
+  <!-- Twibbon Source (hidden) -->
+  <img id="twibbonImg" src="twibbon.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
 
-  <script src="app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log('Service Worker registered', reg))
-      .catch(err => console.error('SW registration failed', err));
-  });
+    const uploadInput = document.getElementById("uploadInput");
+    const previewCanvas = document.getElementById("previewCanvas");
+    const ctx = previewCanvas.getContext("2d");
+    const twibbonImg = document.getElementById("twibbonImg");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const shareBtn = document.getElementById("shareBtn");
+
+    let userImage = null;
+
+    uploadInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // Gambar pengguna dan twibbon akan disesuaikan ke ukuran canvas
+          ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+          ctx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height);
+          ctx.drawImage(twibbonImg, 0, 0, previewCanvas.width, previewCanvas.height);
+          userImage = img;
+
+          // Aktifkan tombol
+          downloadBtn.disabled = false;
+          shareBtn.disabled = !navigator.canShare;
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (!userImage) return alert("Silakan unggah gambar terlebih dahulu!");
+      const link = document.createElement("a");
+      link.download = "twibbon.png";
+      link.href = previewCanvas.toDataURL("image/png");
+      link.click();
+    });
+
+    shareBtn.addEventListener("click", async () => {
+      if (!userImage) return alert("Silakan unggah gambar terlebih dahulu!");
+      previewCanvas.toBlob(async (blob) => {
+        const file = new File([blob], "twibbon.png", { type: "image/png" });
+        try {
+          await navigator.share({
+            files: [file],
+            title: "Twibbon Saya",
+            text: "Ini twibbon buatan saya!",
+          });
+        } catch (err) {
+          alert("Gagal membagikan: " + err.message);
+        }
+      });
+    });
   </script>
-
-    <script>
-    const exitDialog = document.getElementById("exit-dialog");
-    const cancelExitBtn = document.getElementById("cancel-exit");
-    const confirmExitBtn = document.getElementById("confirm-exit");
-    let shouldExit = false;
-
-    window.addEventListener("beforeunload", function (e) {
-      if (typeof unsavedChanges !== 'undefined' && unsavedChanges && !shouldExit) {
-        e.preventDefault();
-        e.returnValue = "";
-        exitDialog.classList.remove("hidden");
-        return "";
-      }
-    });
-
-    confirmExitBtn.addEventListener("click", () => {
-      shouldExit = true;
-      exitDialog.classList.add("hidden");
-      window.location.href = "about:blank";
-    });
-
-    cancelExitBtn.addEventListener("click", () => {
-      exitDialog.classList.add("hidden");
-    });
-      </script>
 </body>
 </html>
