@@ -3,52 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twibbon Sederhana</title>
+  <title>Twibbon Geser & Zoom</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    canvas {
+      touch-action: none; /* penting agar gesture tidak diganggu browser */
+    }
+  </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center p-4 space-y-4">
-  <h1 class="text-2xl font-bold">Twibbon Sederhana</h1>
+  <h1 class="text-2xl font-bold">Twibbon Interaktif</h1>
 
-  <!-- Canvas Preview -->
-  <canvas id="previewCanvas" width="500" height="500" class="border rounded shadow-md"></canvas>
+  <!-- Canvas -->
+  <canvas id="canvas" width="500" height="500" class="border rounded shadow-md touch-none"></canvas>
 
-  <!-- Upload Input -->
-  <input type="file" id="uploadInput" accept="image/*" class="mt-2" />
+  <!-- Input -->
+  <input type="file" id="upload" accept="image/*" />
 
-  <!-- Buttons -->
-  <div class="space-x-2 mt-4">
+  <!-- Tombol -->
+  <div class="space-x-2">
     <button id="downloadBtn" disabled class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50">Unduh Hasil</button>
     <button id="shareBtn" disabled class="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50">Bagikan</button>
   </div>
 
-  <!-- Twibbon Source (hidden) -->
-  <img id="twibbonImg" src="twibbon.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
+  <!-- Twibbon Default (Hidden) -->
+  <img id="twibbon" src="https://i.postimg.cc/y8Fdhw7S/twibbon-default.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
 
   <script>
-    const uploadInput = document.getElementById("uploadInput");
-    const previewCanvas = document.getElementById("previewCanvas");
-    const ctx = previewCanvas.getContext("2d");
-    const twibbonImg = document.getElementById("twibbonImg");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const upload = document.getElementById("upload");
+    const twibbonImg = document.getElementById("twibbon");
     const downloadBtn = document.getElementById("downloadBtn");
     const shareBtn = document.getElementById("shareBtn");
 
-    let userImage = null;
+    let userImg = null;
+    let userTexture = new Image();
+    let isDragging = false;
 
-    uploadInput.addEventListener("change", (e) => {
+    // Transformasi user image
+    const state = {
+      scale: 1,
+      x: 0,
+      y: 0,
+      lastX: 0,
+      lastY: 0,
+      startDist: null,
+      initialScale: 1
+    };
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (userImg) {
+        const iw = userImg.width;
+        const ih = userImg.height;
+
+        const w = iw * state.scale;
+        const h = ih * state.scale;
+        ctx.drawImage(userImg, state.x, state.y, w, h);
+      }
+
+      ctx.drawImage(twibbonImg, 0, 0, canvas.width, canvas.height);
+    }
+
+    function animate() {
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    upload.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(event) {
         const img = new Image();
         img.onload = function() {
-          // Gambar pengguna dan twibbon akan disesuaikan ke ukuran canvas
-          ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-          ctx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height);
-          ctx.drawImage(twibbonImg, 0, 0, previewCanvas.width, previewCanvas.height);
-          userImage = img;
-
-          // Aktifkan tombol
+          userImg = img;
+          state.scale = 1;
+          state.x = (canvas.width - img.width) / 2;
+          state.y = (canvas.height - img.height) / 2;
           downloadBtn.disabled = false;
           shareBtn.disabled = !navigator.canShare;
         };
@@ -57,29 +90,82 @@
       reader.readAsDataURL(file);
     });
 
+    // Pointer events
+    let pointers = [];
+
+    canvas.addEventListener("pointerdown", (e) => {
+      canvas.setPointerCapture(e.pointerId);
+      pointers.push(e);
+      if (pointers.length === 1) {
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+      } else if (pointers.length === 2) {
+        state.startDist = getDistance(pointers[0], pointers[1]);
+        state.initialScale = state.scale;
+      }
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      for (let i = 0; i < pointers.length; i++) {
+        if (pointers[i].pointerId === e.pointerId) {
+          pointers[i] = e;
+          break;
+        }
+      }
+
+      if (pointers.length === 1) {
+        const dx = e.clientX - state.lastX;
+        const dy = e.clientY - state.lastY;
+        state.x += dx;
+        state.y += dy;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+      } else if (pointers.length === 2) {
+        const dist = getDistance(pointers[0], pointers[1]);
+        const scaleFactor = dist / state.startDist;
+        state.scale = state.initialScale * scaleFactor;
+      }
+    });
+
+    canvas.addEventListener("pointerup", (e) => {
+      pointers = pointers.filter(p => p.pointerId !== e.pointerId);
+    });
+
+    canvas.addEventListener("pointercancel", (e) => {
+      pointers = pointers.filter(p => p.pointerId !== e.pointerId);
+    });
+
+    function getDistance(p1, p2) {
+      const dx = p2.clientX - p1.clientX;
+      const dy = p2.clientY - p1.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
     downloadBtn.addEventListener("click", () => {
-      if (!userImage) return alert("Silakan unggah gambar terlebih dahulu!");
+      if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
       const link = document.createElement("a");
       link.download = "twibbon.png";
-      link.href = previewCanvas.toDataURL("image/png");
+      link.href = canvas.toDataURL("image/png");
       link.click();
     });
 
     shareBtn.addEventListener("click", async () => {
-      if (!userImage) return alert("Silakan unggah gambar terlebih dahulu!");
-      previewCanvas.toBlob(async (blob) => {
+      if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
+      canvas.toBlob(async (blob) => {
         const file = new File([blob], "twibbon.png", { type: "image/png" });
         try {
           await navigator.share({
             files: [file],
             title: "Twibbon Saya",
-            text: "Ini twibbon buatan saya!",
+            text: "Lihat twibbon buatan saya!",
           });
         } catch (err) {
           alert("Gagal membagikan: " + err.message);
         }
       });
     });
+
+    animate();
   </script>
 </body>
 </html>
