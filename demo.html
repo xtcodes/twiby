@@ -142,7 +142,7 @@ function updateSteps() {
     finalCanvas.width = 1080;
     finalCanvas.height = 1080;
     const scaleFactor = finalCanvas.width / canvas.width;
-    const adjustedScale = scale;
+    const adjustedScale = scale * scaleFactor;
     const adjustedPosition = {
       x: position.x * scaleFactor,
       y: position.y * scaleFactor
