@@ -1,4 +1,4 @@
-// Versi stabil script.js (tanpa bug, semua fitur utuh dan bekerja)
+// Versi stabil script.js (diperbaiki: tombol unduh berfungsi, watermark hanya saat unduh)
 
 let currentStep = 0;
 const steps = document.querySelectorAll(".step");
@@ -243,5 +243,45 @@ canvas.addEventListener("touchend", () => {
   initialDistance = null;
   endInteraction();
 });
+
+// Tombol Unduh
+if (downloadBtn) {
+  downloadBtn.addEventListener("click", () => {
+    spinner.style.display = "block";
+    countdown.style.display = "block";
+    let timeLeft = 15;
+    countdown.textContent = `Mohon tunggu ${timeLeft} detik...`;
+
+    const interval = setInterval(() => {
+      timeLeft--;
+      countdown.textContent = `Mohon tunggu ${timeLeft} detik...`;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        spinner.style.display = "none";
+        countdown.style.display = "none";
+
+        const hdCanvas = document.createElement("canvas");
+        const hdCtx = hdCanvas.getContext("2d");
+        hdCanvas.width = 1080;
+        hdCanvas.height = 1080;
+        const scaleFactor = hdCanvas.width / canvas.width;
+        const adjustedScale = scale * scaleFactor;
+        const adjustedPosition = {
+          x: position.x * scaleFactor,
+          y: position.y * scaleFactor
+        };
+        drawCanvas(hdCtx, hdCanvas, false, true, adjustedScale, adjustedPosition);
+
+        const link = document.createElement("a");
+        link.download = "twibbon-hd.png";
+        link.href = hdCanvas.toDataURL("image/png");
+        link.click();
+
+        downloadBtn.style.display = "none";
+        shareBtn.style.display = "inline-block";
+      }
+    }, 1000);
+  });
+}
 
 updateSteps();
