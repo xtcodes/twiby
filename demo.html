@@ -267,7 +267,13 @@ downloadBtn.addEventListener("click", () => {
       hdCanvas.width = 1080;
       hdCanvas.height = 1080;
       const hdCtx = hdCanvas.getContext("2d");
-      drawCanvas(hdCtx, hdCanvas, false, true);
+      const scaleFactor = hdCanvas.width / canvas.width;
+const adjustedScale = scale * scaleFactor;
+const adjustedPosition = {
+  x: position.x * scaleFactor,
+  y: position.y * scaleFactor
+};
+drawCanvas(hdCtx, hdCanvas, false, true, adjustedScale, adjustedPosition);
       const link = document.createElement("a");
       link.download = "twibbon-hd.png";
       link.href = hdCanvas.toDataURL();
