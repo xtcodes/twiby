@@ -286,13 +286,20 @@ drawCanvas(hdCtx, hdCanvas, false, true, adjustedScale, adjustedPosition);
 });
 
 shareBtn.addEventListener("click", async () => {
-  try {
-    const hdCanvas = document.createElement("canvas");
-    hdCanvas.width = 1080;
-    hdCanvas.height = 1080;
-    const hdCtx = hdCanvas.getContext("2d");
-    drawCanvas(hdCtx, hdCanvas, false, true);
-    hdCanvas.toBlob(async (blob) => {
+  if (!photoImage.complete || !frameImage.complete) {
+    showNotification("Tunggu hingga semua gambar dimuat sebelum membagikan.");
+    return;
+  }
+
+  const scaleFactor = hdCanvas.width / canvas.width;
+  const adjustedScale = scale * scaleFactor;
+  const adjustedPosition = {
+    x: position.x * scaleFactor,
+    y: position.y * scaleFactor
+  };
+  drawCanvas(hdCtx, hdCanvas, false, true, adjustedScale, adjustedPosition);
+
+  hdCanvas.toBlob(async (blob) => {
       const file = new File([blob], "twibbon.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ title: "Bagikan Twibbon", text: "Lihat hasil twibbon saya!", files: [file] });
