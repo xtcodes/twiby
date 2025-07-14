@@ -30,142 +30,163 @@
   <img id="twibbon" src="twibbon.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
 
   <script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const upload = document.getElementById("upload");
-    const twibbonImg = document.getElementById("twibbon");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const shareBtn = document.getElementById("shareBtn");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const upload = document.getElementById("upload");
+  const twibbonImg = document.getElementById("twibbon");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const shareBtn = document.getElementById("shareBtn");
 
-    let userImg = null;
-    let userTexture = new Image();
-    let isDragging = false;
+  let userImg = null;
 
-    // Transformasi user image
-    const state = {
-      scale: 1,
-      x: 0,
-      y: 0,
-      lastX: 0,
-      lastY: 0,
-      startDist: null,
-      initialScale: 1
-    };
+  const state = {
+    scale: 1,
+    x: 0,
+    y: 0,
+    lastX: 0,
+    lastY: 0,
+    isDragging: false,
+    pointers: [],
+    startDist: 0,
+    initialScale: 1,
+    zoomAnchor: { x: 0, y: 0 },
+  };
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (userImg) {
-        const iw = userImg.width;
-        const ih = userImg.height;
-
-        const w = iw * state.scale;
-        const h = ih * state.scale;
-        ctx.drawImage(userImg, state.x, state.y, w, h);
-      }
-
-      ctx.drawImage(twibbonImg, 0, 0, canvas.width, canvas.height);
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (userImg) {
+      const w = userImg.width * state.scale;
+      const h = userImg.height * state.scale;
+      ctx.drawImage(userImg, state.x, state.y, w, h);
     }
+    ctx.drawImage(twibbonImg, 0, 0, canvas.width, canvas.height);
+  }
 
-    function animate() {
-      draw();
-      requestAnimationFrame(animate);
-    }
+  function animate() {
+    draw();
+    requestAnimationFrame(animate);
+  }
 
-    upload.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-          userImg = img;
-          state.scale = 1;
-          state.x = (canvas.width - img.width) / 2;
-          state.y = (canvas.height - img.height) / 2;
-          downloadBtn.disabled = false;
-          shareBtn.disabled = !navigator.canShare;
-        };
-        img.src = event.target.result;
+  upload.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        userImg = img;
+
+        // Inisialisasi posisi tengah
+        const scaleRatio = canvas.width / img.width;
+        state.scale = scaleRatio;
+        const imgW = img.width * scaleRatio;
+        const imgH = img.height * scaleRatio;
+        state.x = (canvas.width - imgW) / 2;
+        state.y = (canvas.height - imgH) / 2;
+
+        downloadBtn.disabled = false;
+        shareBtn.disabled = !navigator.canShare;
       };
-      reader.readAsDataURL(file);
-    });
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 
-    // Pointer events
-    let pointers = [];
+  function getTouchMidpoint(p1, p2) {
+    return {
+      x: (p1.clientX + p2.clientX) / 2,
+      y: (p1.clientY + p2.clientY) / 2,
+    };
+  }
 
-    canvas.addEventListener("pointerdown", (e) => {
-      canvas.setPointerCapture(e.pointerId);
-      pointers.push(e);
-      if (pointers.length === 1) {
-        state.lastX = e.clientX;
-        state.lastY = e.clientY;
-      } else if (pointers.length === 2) {
-        state.startDist = getDistance(pointers[0], pointers[1]);
-        state.initialScale = state.scale;
+  function getDistance(p1, p2) {
+    const dx = p2.clientX - p1.clientX;
+    const dy = p2.clientY - p1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    state.pointers.push(e);
+
+    if (state.pointers.length === 1) {
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+    } else if (state.pointers.length === 2) {
+      state.startDist = getDistance(state.pointers[0], state.pointers[1]);
+      state.initialScale = state.scale;
+      const midpoint = getTouchMidpoint(state.pointers[0], state.pointers[1]);
+      const rect = canvas.getBoundingClientRect();
+      state.zoomAnchor = {
+        x: (midpoint.x - rect.left - state.x) / state.scale,
+        y: (midpoint.y - rect.top - state.y) / state.scale,
+      };
+    }
+  });
+
+  canvas.addEventListener("pointermove", (e) => {
+    for (let i = 0; i < state.pointers.length; i++) {
+      if (state.pointers[i].pointerId === e.pointerId) {
+        state.pointers[i] = e;
+        break;
       }
-    });
-
-    canvas.addEventListener("pointermove", (e) => {
-      for (let i = 0; i < pointers.length; i++) {
-        if (pointers[i].pointerId === e.pointerId) {
-          pointers[i] = e;
-          break;
-        }
-      }
-
-      if (pointers.length === 1) {
-        const dx = e.clientX - state.lastX;
-        const dy = e.clientY - state.lastY;
-        state.x += dx;
-        state.y += dy;
-        state.lastX = e.clientX;
-        state.lastY = e.clientY;
-      } else if (pointers.length === 2) {
-        const dist = getDistance(pointers[0], pointers[1]);
-        const scaleFactor = dist / state.startDist;
-        state.scale = state.initialScale * scaleFactor;
-      }
-    });
-
-    canvas.addEventListener("pointerup", (e) => {
-      pointers = pointers.filter(p => p.pointerId !== e.pointerId);
-    });
-
-    canvas.addEventListener("pointercancel", (e) => {
-      pointers = pointers.filter(p => p.pointerId !== e.pointerId);
-    });
-
-    function getDistance(p1, p2) {
-      const dx = p2.clientX - p1.clientX;
-      const dy = p2.clientY - p1.clientY;
-      return Math.sqrt(dx * dx + dy * dy);
     }
 
-    downloadBtn.addEventListener("click", () => {
-      if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
-      const link = document.createElement("a");
-      link.download = "twibbon.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    });
+    if (state.pointers.length === 1) {
+      // Drag
+      const dx = e.clientX - state.lastX;
+      const dy = e.clientY - state.lastY;
+      state.x += dx;
+      state.y += dy;
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+    } else if (state.pointers.length === 2) {
+      // Pinch zoom
+      const newDist = getDistance(state.pointers[0], state.pointers[1]);
+      const scaleFactor = newDist / state.startDist;
+      const newScale = state.initialScale * scaleFactor;
 
-    shareBtn.addEventListener("click", async () => {
-      if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
-      canvas.toBlob(async (blob) => {
-        const file = new File([blob], "twibbon.png", { type: "image/png" });
-        try {
-          await navigator.share({
-            files: [file],
-            title: "Twibbon Saya",
-            text: "Lihat twibbon buatan saya!",
-          });
-        } catch (err) {
-          alert("Gagal membagikan: " + err.message);
-        }
-      });
-    });
+      const dx = state.zoomAnchor.x * (newScale - state.scale);
+      const dy = state.zoomAnchor.y * (newScale - state.scale);
+      state.x -= dx;
+      state.y -= dy;
+      state.scale = newScale;
+    }
+  });
 
-    animate();
-  </script>
+  canvas.addEventListener("pointerup", (e) => {
+    state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
+  });
+  canvas.addEventListener("pointercancel", (e) => {
+    state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
+  });
+
+  downloadBtn.addEventListener("click", () => {
+    if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
+    const link = document.createElement("a");
+    link.download = "twibbon.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+
+  shareBtn.addEventListener("click", async () => {
+    if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], "twibbon.png", { type: "image/png" });
+      try {
+        await navigator.share({
+          files: [file],
+          title: "Twibbon Saya",
+          text: "Lihat twibbon buatan saya!",
+        });
+      } catch (err) {
+        alert("Gagal membagikan: " + err.message);
+      }
+    });
+  });
+
+  animate();
+</script>
+
 </body>
 </html>
