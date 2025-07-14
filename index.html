@@ -9,9 +9,7 @@
     canvas {
       width: 100%;
       touch-action: none;
-      background-color: white;
     }
-
     #spinner {
       position: absolute;
       bottom: 16px;
@@ -24,7 +22,6 @@
       animation: spin 1s linear infinite;
       display: none;
     }
-
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -33,9 +30,8 @@
 <body class="bg-gray-100 flex flex-col items-center p-4 space-y-4 relative">
   <h1 class="text-2xl font-bold">Twibbon Interaktif</h1>
 
-  <!-- Container agar spinner bisa absolute -->
   <div class="relative">
-    <canvas id="canvas" width="500" height="500" class="border rounded shadow-md"></canvas>
+    <canvas id="canvas" width="500" height="500" class="border rounded shadow-md bg-white"></canvas>
     <div id="spinner"></div>
   </div>
 
@@ -58,6 +54,8 @@
     const spinner = document.getElementById("spinner");
 
     let userImg = null;
+    let imageLoaded = false;
+    let isProcessing = false;
 
     const state = {
       scale: 1,
@@ -78,8 +76,12 @@
     let hideTimeout = null;
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "white";
+      // Gambar latar abu-abu jika sedang proses
+      if (isProcessing) {
+        ctx.fillStyle = "#ccc";
+      } else {
+        ctx.fillStyle = "white";
+      }
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (userImg) {
@@ -88,8 +90,12 @@
         ctx.drawImage(userImg, state.x, state.y, w, h);
       }
 
-      // Fade effect
-      twibbonOpacity += (targetOpacity - twibbonOpacity) * FADE_SPEED;
+      if (imageLoaded) {
+        twibbonOpacity += (targetOpacity - twibbonOpacity) * FADE_SPEED;
+      } else {
+        twibbonOpacity = 1.0;
+      }
+
       ctx.globalAlpha = twibbonOpacity;
       ctx.drawImage(twibbonImg, 0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1.0;
@@ -114,6 +120,7 @@
     }
 
     function triggerTwibbonFade() {
+      if (!imageLoaded) return;
       targetOpacity = 0.4;
       if (hideTimeout) clearTimeout(hideTimeout);
       hideTimeout = setTimeout(() => {
@@ -129,6 +136,7 @@
         const img = new Image();
         img.onload = () => {
           userImg = img;
+          imageLoaded = true;
           const scaleRatio = canvas.width / img.width;
           state.scale = scaleRatio;
           const imgW = img.width * scaleRatio;
@@ -192,7 +200,6 @@
     canvas.addEventListener("pointerup", (e) => {
       state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
     });
-
     canvas.addEventListener("pointercancel", (e) => {
       state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
     });
@@ -200,24 +207,18 @@
     downloadBtn.addEventListener("click", () => {
       if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
 
-      // 1. Tampilkan spinner dan abu-abu canvas
       spinner.style.display = "block";
-      canvas.style.backgroundColor = "#ccc";
+      isProcessing = true;
 
-      // 2. Delay 15 detik
       setTimeout(() => {
-        // 3. Kembalikan ke putih sebelum render
-        canvas.style.backgroundColor = "white";
+        isProcessing = false;
+        spinner.style.display = "none";
 
-        // 4. Ambil gambar
         const link = document.createElement("a");
         link.download = "twibbon.png";
         link.href = canvas.toDataURL("image/png");
         link.click();
-
-        // 5. Sembunyikan spinner
-        spinner.style.display = "none";
-      }, 15000); // 15 detik
+      }, 15000);
     });
 
     shareBtn.addEventListener("click", async () => {
