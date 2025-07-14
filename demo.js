@@ -1,4 +1,4 @@
-// Versi stabil script.js FINAL
+// Versi stabil script.js (diperbaiki: tombol unduh berfungsi, watermark hanya saat unduh)
 
 let currentStep = 0;
 const steps = document.querySelectorAll(".step");
@@ -150,81 +150,138 @@ function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracti
     ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
     ctxDraw.textAlign = "right";
     ctxDraw.textBaseline = "bottom";
-    ctxDraw.fillText("@TwibbonApp", canvasRef.width - 20, canvasRef.height - 20);
+    ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
   }
 }
 
-// ... interaction handlers tetap sama ...
+function getTouchPos(touch) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: touch.clientX - rect.left,
+    y: touch.clientY - rect.top
+  };
+}
+
+function getDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function startInteraction() {
+  isInteracting = true;
+  drawCanvas();
+  clearTimeout(interactionTimeout);
+}
+
+function endInteraction() {
+  clearTimeout(interactionTimeout);
+  interactionTimeout = setTimeout(() => {
+    isInteracting = false;
+    drawCanvas();
+  }, 300);
+}
+
+canvas.addEventListener("mousedown", e => {
+  isDragging = true;
+  lastTouch = { x: e.offsetX, y: e.offsetY };
+  startInteraction();
+});
+canvas.addEventListener("mousemove", e => {
+  if (isDragging) {
+    const dx = e.offsetX - lastTouch.x;
+    const dy = e.offsetY - lastTouch.y;
+    position.x += dx;
+    position.y += dy;
+    lastTouch = { x: e.offsetX, y: e.offsetY };
+    drawCanvas();
+  }
+});
+canvas.addEventListener("mouseup", () => { isDragging = false; endInteraction(); });
+canvas.addEventListener("mouseleave", () => { isDragging = false; endInteraction(); });
+
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 0.05 : -0.05;
+  scale = Math.max(0.1, Math.min(5, scale + delta));
+  startInteraction();
+  drawCanvas();
+  endInteraction();
+});
+
+canvas.addEventListener("touchstart", e => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    lastTouch = getTouchPos(e.touches[0]);
+  } else if (e.touches.length === 2) {
+    initialDistance = getDistance(e.touches);
+  }
+  startInteraction();
+}, { passive: false });
+
+canvas.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && isDragging) {
+    const touch = getTouchPos(e.touches[0]);
+    const dx = touch.x - lastTouch.x;
+    const dy = touch.y - lastTouch.y;
+    position.x += dx;
+    position.y += dy;
+    lastTouch = touch;
+    drawCanvas();
+  } else if (e.touches.length === 2 && initialDistance !== null) {
+    const newDistance = getDistance(e.touches);
+    const zoom = newDistance / initialDistance;
+    scale = Math.max(0.1, Math.min(5, scale * zoom));
+    initialDistance = newDistance;
+    drawCanvas();
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchend", () => {
+  isDragging = false;
+  initialDistance = null;
+  endInteraction();
+});
 
 // Tombol Unduh
+if (downloadBtn) {
+  downloadBtn.addEventListener("click", () => {
+    spinner.style.display = "block";
+    countdown.style.display = "block";
+    let timeLeft = 15;
+    countdown.textContent = `Mohon tunggu ${timeLeft} detik...`;
 
-downloadBtn.addEventListener("click", () => {
-  spinner.style.display = "block";
-  countdown.style.display = "block";
-  let seconds = 15;
-  countdown.textContent = `Mengunduh dalam ${seconds} detik...`;
+    const interval = setInterval(() => {
+      timeLeft--;
+      countdown.textContent = `Mohon tunggu ${timeLeft} detik...`;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        spinner.style.display = "none";
+        countdown.style.display = "none";
 
-  const interval = setInterval(() => {
-    seconds--;
-    countdown.textContent = `Mengunduh dalam ${seconds} detik...`;
-    if (seconds <= 0) {
-      clearInterval(interval);
-      spinner.style.display = "none";
-      countdown.style.display = "none";
+        const hdCanvas = document.createElement("canvas");
+        const hdCtx = hdCanvas.getContext("2d");
+        hdCanvas.width = 1080;
+        hdCanvas.height = 1080;
+        const scaleFactor = hdCanvas.width / canvas.width;
+        const adjustedScale = scale * scaleFactor;
+        const adjustedPosition = {
+          x: position.x * scaleFactor,
+          y: position.y * scaleFactor
+        };
+        drawCanvas(hdCtx, hdCanvas, false, true, adjustedScale, adjustedPosition);
 
-      finalCanvas.width = 1080;
-      finalCanvas.height = 1080;
-      const scaleFactor = finalCanvas.width / canvas.width;
-      const adjustedScale = scale * scaleFactor;
-      const adjustedPosition = {
-        x: position.x * scaleFactor,
-        y: position.y * scaleFactor
-      };
-
-      drawCanvas(finalCtx, finalCanvas, false, true, adjustedScale, adjustedPosition);
-
-      finalCanvas.toBlob(blob => {
         const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "twibbon.png";
+        link.download = "twibbon-hd.png";
+        link.href = hdCanvas.toDataURL("image/png");
         link.click();
-        shareBtn.style.display = "inline-block";
+
         downloadBtn.style.display = "none";
-      });
-    }
-  }, 1000);
-});
-
-// Tombol Bagikan
-
-shareBtn.addEventListener("click", () => {
-  finalCanvas.width = 1080;
-  finalCanvas.height = 1080;
-  const scaleFactor = finalCanvas.width / canvas.width;
-  const adjustedScale = scale * scaleFactor;
-  const adjustedPosition = {
-    x: position.x * scaleFactor,
-    y: position.y * scaleFactor
-  };
-  drawCanvas(finalCtx, finalCanvas, false, true, adjustedScale, adjustedPosition);
-
-  finalCanvas.toBlob(async blob => {
-    const file = new File([blob], "twibbon.png", { type: "image/png" });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          title: "Twibbon Saya",
-          text: "Lihat hasil twibbon saya!",
-          files: [file]
-        });
-      } catch (err) {
-        showNotification("Gagal membagikan gambar.");
+        shareBtn.style.display = "inline-block";
       }
-    } else {
-      showNotification("Fitur bagikan tidak didukung di perangkat ini.");
-    }
-  }, "image/png");
-});
+    }, 1000);
+  });
+}
 
 updateSteps();
