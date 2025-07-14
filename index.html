@@ -9,13 +9,35 @@
     canvas {
       width: 100%;
       touch-action: none;
+      background-color: white;
+    }
+
+    #spinner {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(0,0,0,0.2);
+      border-top: 3px solid gray;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center p-4 space-y-4">
+<body class="bg-gray-100 flex flex-col items-center p-4 space-y-4 relative">
   <h1 class="text-2xl font-bold">Twibbon Interaktif</h1>
 
-  <canvas id="canvas" width="500" height="500" class="border rounded shadow-md"></canvas>
+  <!-- Container agar spinner bisa absolute -->
+  <div class="relative">
+    <canvas id="canvas" width="500" height="500" class="border rounded shadow-md"></canvas>
+    <div id="spinner"></div>
+  </div>
 
   <input type="file" id="upload" accept="image/*" />
 
@@ -33,6 +55,7 @@
     const twibbonImg = document.getElementById("twibbon");
     const downloadBtn = document.getElementById("downloadBtn");
     const shareBtn = document.getElementById("shareBtn");
+    const spinner = document.getElementById("spinner");
 
     let userImg = null;
 
@@ -48,7 +71,7 @@
       zoomAnchor: { x: 0, y: 0 }
     };
 
-    // Twibbon fade state
+    // Twibbon fade
     let twibbonOpacity = 1.0;
     let targetOpacity = 1.0;
     const FADE_SPEED = 0.05;
@@ -56,6 +79,8 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (userImg) {
         const w = userImg.width * state.scale;
@@ -63,9 +88,8 @@
         ctx.drawImage(userImg, state.x, state.y, w, h);
       }
 
-      // Smooth fade toward target opacity
+      // Fade effect
       twibbonOpacity += (targetOpacity - twibbonOpacity) * FADE_SPEED;
-
       ctx.globalAlpha = twibbonOpacity;
       ctx.drawImage(twibbonImg, 0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1.0;
@@ -94,27 +118,23 @@
       if (hideTimeout) clearTimeout(hideTimeout);
       hideTimeout = setTimeout(() => {
         targetOpacity = 1.0;
-      }, 300); // kembali ke normal setelah 300ms tidak interaksi
+      }, 300);
     }
 
     upload.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
           userImg = img;
-
-          // Posisikan di tengah canvas
           const scaleRatio = canvas.width / img.width;
           state.scale = scaleRatio;
           const imgW = img.width * scaleRatio;
           const imgH = img.height * scaleRatio;
           state.x = (canvas.width - imgW) / 2;
           state.y = (canvas.height - imgH) / 2;
-
           downloadBtn.disabled = false;
           shareBtn.disabled = !navigator.canShare;
         };
@@ -126,14 +146,12 @@
     canvas.addEventListener("pointerdown", (e) => {
       canvas.setPointerCapture(e.pointerId);
       state.pointers.push(e);
-
       if (state.pointers.length === 1) {
         state.lastX = e.clientX;
         state.lastY = e.clientY;
       } else if (state.pointers.length === 2) {
         state.startDist = getDistance(state.pointers[0], state.pointers[1]);
         state.initialScale = state.scale;
-
         const midpoint = getMidpoint(state.pointers[0], state.pointers[1]);
         const rect = canvas.getBoundingClientRect();
         state.zoomAnchor = {
@@ -150,7 +168,6 @@
           break;
         }
       }
-
       if (state.pointers.length === 1) {
         const dx = e.clientX - state.lastX;
         const dy = e.clientY - state.lastY;
@@ -162,7 +179,6 @@
         const newDist = getDistance(state.pointers[0], state.pointers[1]);
         const scaleFactor = newDist / state.startDist;
         const newScale = state.initialScale * scaleFactor;
-
         const dx = state.zoomAnchor.x * (newScale - state.scale);
         const dy = state.zoomAnchor.y * (newScale - state.scale);
         state.x -= dx;
@@ -183,10 +199,25 @@
 
     downloadBtn.addEventListener("click", () => {
       if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
-      const link = document.createElement("a");
-      link.download = "twibbon.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+
+      // 1. Tampilkan spinner dan abu-abu canvas
+      spinner.style.display = "block";
+      canvas.style.backgroundColor = "#ccc";
+
+      // 2. Delay 15 detik
+      setTimeout(() => {
+        // 3. Kembalikan ke putih sebelum render
+        canvas.style.backgroundColor = "white";
+
+        // 4. Ambil gambar
+        const link = document.createElement("a");
+        link.download = "twibbon.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+
+        // 5. Sembunyikan spinner
+        spinner.style.display = "none";
+      }, 15000); // 15 detik
     });
 
     shareBtn.addEventListener("click", async () => {
