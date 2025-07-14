@@ -9,6 +9,7 @@
     canvas {
       width: 100%;
       touch-action: none;
+      background-color: white;
     }
     #spinner {
       position: absolute;
@@ -31,7 +32,7 @@
   <h1 class="text-2xl font-bold">Twibbon Interaktif</h1>
 
   <div class="relative">
-    <canvas id="canvas" width="500" height="500" class="border rounded shadow-md bg-white"></canvas>
+    <canvas id="canvas" width="500" height="500" class="border rounded shadow-md"></canvas>
     <div id="spinner"></div>
   </div>
 
@@ -42,7 +43,7 @@
     <button id="shareBtn" disabled class="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50">Bagikan</button>
   </div>
 
-  <img id="twibbon" src="twibbon.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
+  <img id="twibbon" src="https://i.postimg.cc/y8Fdhw7S/twibbon.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
 
   <script>
     const canvas = document.getElementById("canvas");
@@ -55,7 +56,7 @@
 
     let userImg = null;
     let imageLoaded = false;
-    let isProcessing = false;
+    let hideContent = false;
 
     const state = {
       scale: 1,
@@ -69,19 +70,20 @@
       zoomAnchor: { x: 0, y: 0 }
     };
 
-    // Twibbon fade
     let twibbonOpacity = 1.0;
     let targetOpacity = 1.0;
     const FADE_SPEED = 0.05;
     let hideTimeout = null;
 
     function draw() {
-      // Gambar latar abu-abu jika sedang proses
-      if (isProcessing) {
+      // Jika hideContent aktif, tampilkan latar abu-abu tanpa gambar
+      if (hideContent) {
         ctx.fillStyle = "#ccc";
-      } else {
-        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        return;
       }
+
+      ctx.fillStyle = "white";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (userImg) {
@@ -137,12 +139,14 @@
         img.onload = () => {
           userImg = img;
           imageLoaded = true;
+
           const scaleRatio = canvas.width / img.width;
           state.scale = scaleRatio;
           const imgW = img.width * scaleRatio;
           const imgH = img.height * scaleRatio;
           state.x = (canvas.width - imgW) / 2;
           state.y = (canvas.height - imgH) / 2;
+
           downloadBtn.disabled = false;
           shareBtn.disabled = !navigator.canShare;
         };
@@ -176,6 +180,7 @@
           break;
         }
       }
+
       if (state.pointers.length === 1) {
         const dx = e.clientX - state.lastX;
         const dy = e.clientY - state.lastY;
@@ -200,6 +205,7 @@
     canvas.addEventListener("pointerup", (e) => {
       state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
     });
+
     canvas.addEventListener("pointercancel", (e) => {
       state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
     });
@@ -208,10 +214,10 @@
       if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
 
       spinner.style.display = "block";
-      isProcessing = true;
+      hideContent = true;
 
       setTimeout(() => {
-        isProcessing = false;
+        hideContent = false;
         spinner.style.display = "none";
 
         const link = document.createElement("a");
