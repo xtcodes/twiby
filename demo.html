@@ -141,7 +141,13 @@ function updateSteps() {
   if (currentStep === 3) {
     finalCanvas.width = 1080;
     finalCanvas.height = 1080;
-    drawCanvas(finalCtx, finalCanvas, false, true);
+    const scaleFactor = finalCanvas.width / canvas.width;
+    const adjustedScale = scale;
+    const adjustedPosition = {
+      x: position.x * scaleFactor,
+      y: position.y * scaleFactor
+    };
+    drawCanvas(finalCtx, finalCanvas, false, true, adjustedScale, adjustedPosition);
   }
 }
 
@@ -220,13 +226,15 @@ function hasTransparency(img) {
   return false;
 }
 
-function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracting, showWatermark = false) {
+function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracting, showWatermark = false, scaleOverride = null, positionOverride = null) {
   ctxDraw.clearRect(0, 0, canvasRef.width, canvasRef.height);
   if (photoImage.src) {
-    const drawWidth = photoImage.width * scale;
-  const drawHeight = photoImage.height * scale;
-  const offsetX = (canvasRef.width - drawWidth) / 2 + position.x;
-  const offsetY = (canvasRef.height - drawHeight) / 2 + position.y;
+    const useScale = scaleOverride ?? scale;
+  const usePosition = positionOverride ?? position;
+  const drawWidth = photoImage.width * useScale;
+  const drawHeight = photoImage.height * useScale;
+  const offsetX = (canvasRef.width - drawWidth) / 2 + usePosition.x;
+  const offsetY = (canvasRef.height - drawHeight) / 2 + usePosition.y;
   ctxDraw.drawImage(photoImage, offsetX, offsetY, drawWidth, drawHeight);
   }
   if (frameImage.src) {
