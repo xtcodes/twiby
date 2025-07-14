@@ -1,4 +1,4 @@
-// script.js FINAL dengan perbaikan watermark SAJA
+// Versi lengkap script.js
 
 let currentStep = 0;
 const steps = document.querySelectorAll(".step");
@@ -150,67 +150,98 @@ function drawCanvas(ctxDraw = ctx, canvasRef = canvas, transparent = isInteracti
     ctxDraw.font = `${Math.floor(canvasRef.width * 0.035)}px sans-serif`;
     ctxDraw.textAlign = "right";
     ctxDraw.textBaseline = "bottom";
-    ctxDraw.fillText("@TwibbonApp", canvasRef.width - 20, canvasRef.height - 20);
+    ctxDraw.fillText("#XTCODES", canvasRef.width - 20, canvasRef.height - 20);
   }
 }
 
-function generateHDCanvas(callback, watermark = false) {
-  const hdCanvas = document.createElement("canvas");
-  hdCanvas.width = 1080;
-  hdCanvas.height = 1080;
-  const hdCtx = hdCanvas.getContext("2d");
-  const scaleFactor = hdCanvas.width / canvas.width;
-  const adjustedScale = scale * scaleFactor;
-  const adjustedPosition = {
-    x: position.x * scaleFactor,
-    y: position.y * scaleFactor
+function getTouchPos(touch) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: touch.clientX - rect.left,
+    y: touch.clientY - rect.top
   };
-  drawCanvas(hdCtx, hdCanvas, false, watermark, adjustedScale, adjustedPosition);
-  callback(hdCanvas);
 }
 
-downloadBtn.addEventListener("click", () => {
-  spinner.style.display = "block";
-  countdown.style.display = "block";
-  let timeLeft = 15;
-  countdown.textContent = `Mohon tunggu ${timeLeft} detik...`;
-  const countdownInterval = setInterval(() => {
-    timeLeft--;
-    countdown.textContent = `Mohon tunggu ${timeLeft} detik...`;
-    if (timeLeft <= 0) {
-      clearInterval(countdownInterval);
-      spinner.style.display = "none";
-      countdown.style.display = "none";
+function getDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 
-      generateHDCanvas(hdCanvas => {
-        const link = document.createElement("a");
-        link.download = "twibbon-hd.png";
-        link.href = hdCanvas.toDataURL();
-        link.click();
-        downloadBtn.style.display = "none";
-        shareBtn.style.display = "inline-block";
-        unsavedChanges = false;
-      }, true);
-    }
-  }, 1000);
+function startInteraction() {
+  isInteracting = true;
+  drawCanvas();
+  clearTimeout(interactionTimeout);
+}
+
+function endInteraction() {
+  clearTimeout(interactionTimeout);
+  interactionTimeout = setTimeout(() => {
+    isInteracting = false;
+    drawCanvas();
+  }, 300);
+}
+
+canvas.addEventListener("mousedown", e => {
+  isDragging = true;
+  lastTouch = { x: e.offsetX, y: e.offsetY };
+  startInteraction();
+});
+canvas.addEventListener("mousemove", e => {
+  if (isDragging) {
+    const dx = e.offsetX - lastTouch.x;
+    const dy = e.offsetY - lastTouch.y;
+    position.x += dx;
+    position.y += dy;
+    lastTouch = { x: e.offsetX, y: e.offsetY };
+    drawCanvas();
+  }
+});
+canvas.addEventListener("mouseup", () => { isDragging = false; endInteraction(); });
+canvas.addEventListener("mouseleave", () => { isDragging = false; endInteraction(); });
+
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 0.05 : -0.05;
+  scale = Math.max(0.1, Math.min(5, scale + delta));
+  startInteraction();
+  drawCanvas();
+  endInteraction();
 });
 
-shareBtn.addEventListener("click", () => {
-  generateHDCanvas(hdCanvas => {
-    hdCanvas.toBlob(async blob => {
-      const file = new File([blob], "twibbon.png", { type: "image/png" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: "Bagikan Twibbon",
-          text: "Lihat hasil twibbon saya!",
-          files: [file]
-        });
-        unsavedChanges = false;
-      } else {
-        showNotification("Perangkat tidak mendukung Web Share API dengan file.");
-      }
-    });
-  }, true);
+canvas.addEventListener("touchstart", e => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    lastTouch = getTouchPos(e.touches[0]);
+  } else if (e.touches.length === 2) {
+    initialDistance = getDistance(e.touches);
+  }
+  startInteraction();
+}, { passive: false });
+
+canvas.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && isDragging) {
+    const touch = getTouchPos(e.touches[0]);
+    const dx = touch.x - lastTouch.x;
+    const dy = touch.y - lastTouch.y;
+    position.x += dx;
+    position.y += dy;
+    lastTouch = touch;
+    drawCanvas();
+  } else if (e.touches.length === 2 && initialDistance !== null) {
+    const newDistance = getDistance(e.touches);
+    const zoom = newDistance / initialDistance;
+    scale = Math.max(0.1, Math.min(5, scale * zoom));
+    initialDistance = newDistance;
+    drawCanvas();
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchend", () => {
+  isDragging = false;
+  initialDistance = null;
+  endInteraction();
 });
 
 updateSteps();
