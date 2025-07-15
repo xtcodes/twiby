@@ -204,6 +204,8 @@ downloadBtn.addEventListener("click", () => {
 
   setTimeout(() => {
     hideContent = false;
+    twibbonOpacity = 1.0; // paksa twibbon kembali ke opacity penuh sebelum unduh
+    targetOpacity = 1.0;
     draw(); // pastikan canvas menggambar ulang sebelum diunduh
     spinner.style.display = "none";
     const link = document.createElement("a");
