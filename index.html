@@ -8,7 +8,7 @@
     body {
       font-family: sans-serif;
       background-color: #f9f9f9;
-      margin: 0;
+      margin: 20px auto;
       padding: 20px;
       text-align: center;
     }
@@ -22,6 +22,8 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       touch-action: none;
+      display: block;
+      margin: 0 auto;
     }
     .button {
       padding: 10px 16px;
@@ -59,7 +61,7 @@
       align-items: center;
     }
     .drop-zone {
-      width: 300px;
+      width: 100%;
       aspect-ratio: 1 / 1;
       border: 2px dashed #aaa;
       border-radius: 8px;
@@ -78,6 +80,9 @@
       color: #666;
       font-size: 14px;
     }
+    #twibbon {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -94,7 +99,7 @@
       <button id="downloadBtn" class="button download" disabled>Unduh Hasil</button>
       <button id="shareBtn" class="button share" disabled>Bagikan</button>
     </div>
-    <img id="twibbon" src="twibbon.png" alt="Twibbon" style="display:none" crossorigin="anonymous"/>
+    <img id="twibbon" src="twibbon.png" alt="Twibbon" crossorigin="anonymous"/>
   </div>
   <script>
     const canvas = document.getElementById("canvas");
