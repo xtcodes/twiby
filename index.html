@@ -3,361 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twibbon Sederhana</title>
+  <title>Aplikasi Twibbon Sederhana</title>
   <style>
     body {
       font-family: sans-serif;
+      text-align: center;
+      background: #f4f4f4;
       margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: #f5f5f5;
+      padding: 2rem;
     }
-    #dropZone {
-      width: 90vmin;
-      height: 90vmin;
-      border: 2px dashed #bbb;
-      background: #fff;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
+    .canvas-container {
       position: relative;
-      margin-top: 20px;
-    }
-    #dropZone.dragover {
-      border-color: #666;
-    }
-    #dropZone p {
-      color: #777;
-      font-size: 1em;
-      pointer-events: none;
+      display: inline-block;
+      background: #fff;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
     }
     canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-    }
-    #controls {
-      margin: 20px;
-    }
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      font-size: 1em;
-      border: none;
-      border-radius: 6px;
-      background: #1e90ff;
-      color: white;
-      cursor: pointer;
-    }
-    button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
-    #spinner {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      width: 20px;
-      height: 20px;
-      border: 3px solid #ccc;
-      border-top: 3px solid #1e90ff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      display: none;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      max-width: 100%;
+      height: auto;
     }
     input[type="file"] {
-      display: none;
+      margin: 1rem 0;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="dropZone">
-    <p>Klik atau tarik gambar ke sini</p>
-    <canvas id="canvas" width="1000" height="1000"></canvas>
-    <div id="spinner"></div>
+  <h1>Aplikasi Twibbon Sederhana</h1>
+  <div class="canvas-container">
+    <canvas id="twibbonCanvas" width="500" height="500"></canvas>
   </div>
-
-  <input type="file" accept="image/*" id="fileInput" />
-
-  <div id="controls">
-    <button id="downloadBtn" disabled>Unduh</button>
-    <button id="shareBtn" disabled style="display:none">Bagikan</button>
-    <button id="reloadBtn" style="display:none">Muat Ulang</button>
-  </div>
-
-  <img id="twibbon" src="twibbon.png" style="display:none" />
+  <br />
+  <input type="file" id="uploadImage" accept="image/*" />
+  <br />
+  <button onclick="downloadImage()">Unduh Hasil</button>
 
   <script>
-    // Semua variabel dan setup sebelumnya...
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.style.touchAction = "none";
+    const canvas = document.getElementById('twibbonCanvas');
+    const ctx = canvas.getContext('2d');
 
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
-    const twibbonImg = document.getElementById("twibbon");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const shareBtn = document.getElementById("shareBtn");
-    const reloadBtn = document.getElementById("reloadBtn");
-    const spinner = document.getElementById("spinner");
-
-    let userImg = null;
-    let imageLoaded = false;
-    let hideContent = false;
-
-    const state = {
-      scale: 1,
-      x: 0,
-      y: 0,
-      lastX: 0,
-      lastY: 0,
-      pointers: [],
-      startDist: 0,
-      initialScale: 1,
-      initialX: 0,
-      initialY: 0,
-      zoomAnchor: { x: 0, y: 0 }
+    const twibbon = new Image();
+    twibbon.src = 'twibbon.png'; // Ganti dengan URL twibbon transparan
+    twibbon.onload = () => {
+      ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
     };
 
-    let twibbonOpacity = 1.0;
-    let targetOpacity = 1.0;
-    const FADE_SPEED = 0.05;
-    let hideTimeout = null;
+    document.getElementById('uploadImage').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
 
-    let typingText = "Sedang diproses...";
-    let typedLength = 0;
-    let typingSpeed = 150;
-    let lastTypingTime = 0;
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (hideContent) {
-        ctx.fillStyle = "#ccc";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        if (Date.now() - lastTypingTime > typingSpeed && typedLength < typingText.length) {
-          typedLength++;
-          lastTypingTime = Date.now();
-        }
-        const displayText = typingText.substring(0, typedLength);
-        ctx.fillStyle = "#444";
-        ctx.font = "bold 20px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(displayText, canvas.width / 2, canvas.height / 2);
-        return;
-      }
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      if (userImg) {
-        const w = userImg.width * state.scale;
-        const h = userImg.height * state.scale;
-        ctx.drawImage(userImg, state.x, state.y, w, h);
-      }
-      if (imageLoaded) {
-        twibbonOpacity += (targetOpacity - twibbonOpacity) * FADE_SPEED;
-      } else {
-        twibbonOpacity = 1.0;
-      }
-      ctx.globalAlpha = twibbonOpacity;
-      ctx.drawImage(twibbonImg, 0, 0, canvas.width, canvas.height);
-      ctx.globalAlpha = 1.0;
-    }
-
-    function animate() {
-      draw();
-      requestAnimationFrame(animate);
-    }
-
-    function getDistance(p1, p2) {
-      const dx = p2.clientX - p1.clientX;
-      const dy = p2.clientY - p1.clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    function getMidpoint(p1, p2) {
-      return {
-        x: (p1.clientX + p2.clientX) / 2,
-        y: (p1.clientY + p2.clientY) / 2
-      };
-    }
-
-    function triggerTwibbonFade() {
-      if (!imageLoaded) return;
-      targetOpacity = 0.4;
-      if (hideTimeout) clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => targetOpacity = 1.0, 300);
-    }
-
-    function loadImageFromFile(file) {
-      if (!file || !file.type.startsWith("image/")) return;
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = function (event) {
         const img = new Image();
-        img.onload = () => {
-          userImg = img;
-          imageLoaded = true;
-          const scaleRatio = canvas.width / img.width;
-          state.scale = scaleRatio;
-          state.x = (canvas.width - img.width * scaleRatio) / 2;
-          state.y = (canvas.height - img.height * scaleRatio) / 2;
-          downloadBtn.disabled = false;
-          shareBtn.style.display = "none";
-          canvas.style.display = "block";
-          dropZone.querySelector("p").style.display = "none";
+        img.onload = function () {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // gambar user
+          ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height); // gambar twibbon
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
+    });
+
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.download = 'twibbon.png';
+      link.href = canvas.toDataURL();
+      link.click();
     }
-
-    fileInput.addEventListener("change", (e) => {
-      loadImageFromFile(e.target.files[0]);
-    });
-
-    dropZone.addEventListener("click", () => fileInput.click());
-    dropZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropZone.classList.add("dragover");
-    });
-
-    dropZone.addEventListener("dragleave", () => {
-      dropZone.classList.remove("dragover");
-    });
-
-    dropZone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropZone.classList.remove("dragover");
-      loadImageFromFile(e.dataTransfer.files[0]);
-    });
-
-    canvas.addEventListener("pointerdown", (e) => {
-      if (!imageLoaded) return;
-      canvas.setPointerCapture(e.pointerId);
-      state.pointers.push(e);
-      if (state.pointers.length === 1) {
-        state.lastX = e.clientX;
-        state.lastY = e.clientY;
-      } else if (state.pointers.length === 2) {
-        state.startDist = getDistance(state.pointers[0], state.pointers[1]);
-        state.initialScale = state.scale;
-        state.initialX = state.x;
-        state.initialY = state.y;
-        const midpoint = getMidpoint(state.pointers[0], state.pointers[1]);
-        const rect = canvas.getBoundingClientRect();
-        state.zoomAnchor = {
-          x: (midpoint.x - rect.left - state.x) / state.scale,
-          y: (midpoint.y - rect.top - state.y) / state.scale
-        };
-      }
-    });
-
-    canvas.addEventListener("pointermove", (e) => {
-      if (!imageLoaded) return;
-      for (let i = 0; i < state.pointers.length; i++) {
-        if (state.pointers[i].pointerId === e.pointerId) {
-          state.pointers[i] = e;
-          break;
-        }
-      }
-      if (state.pointers.length === 1) {
-        const dx = e.clientX - state.lastX;
-        const dy = e.clientY - state.lastY;
-        state.x += dx;
-        state.y += dy;
-        state.lastX = e.clientX;
-        state.lastY = e.clientY;
-      } else if (state.pointers.length === 2) {
-        const newDist = getDistance(state.pointers[0], state.pointers[1]);
-        const scaleFactor = newDist / state.startDist;
-        const newScale = state.initialScale * scaleFactor;
-        state.scale = newScale;
-        state.x = state.initialX - state.zoomAnchor.x * (newScale - state.initialScale);
-        state.y = state.initialY - state.zoomAnchor.y * (newScale - state.initialScale);
-      }
-      triggerTwibbonFade();
-    });
-
-    canvas.addEventListener("pointerup", (e) => {
-      if (!imageLoaded) return;
-      state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
-    });
-
-    canvas.addEventListener("pointercancel", (e) => {
-      if (!imageLoaded) return;
-      state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
-    });
-
-    downloadBtn.addEventListener("click", () => {
-      downloadBtn.style.display = "none";
-      reloadBtn.style.display = "inline-block";
-
-      if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
-
-      spinner.style.display = "block";
-      hideContent = true;
-      typedLength = 0;
-      lastTypingTime = Date.now();
-
-      setTimeout(() => {
-        hideContent = false;
-        twibbonOpacity = 1.0;
-        targetOpacity = 1.0;
-        draw();
-        spinner.style.display = "none";
-
-        const link = document.createElement("a");
-        link.download = "twibbon.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-
-        // Deteksi dukungan share
-        if (navigator.canShare && navigator.canShare({ files: [new File([""], "test.png", { type: "image/png" })] })) {
-          shareBtn.style.display = "inline-block";
-        }
-      }, 15000);
-    });
-
-    reloadBtn.addEventListener("click", () => {
-      downloadBtn.style.display = "inline-block";
-      reloadBtn.style.display = "none";
-      shareBtn.style.display = "none";
-    });
-
-    shareBtn.addEventListener("click", async () => {
-      if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
-
-      canvas.toBlob(async (blob) => {
-        const file = new File([blob], "twibbon.png", { type: "image/png" });
-
-        if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
-          alert("Fitur bagikan tidak didukung di perangkat atau browser ini.");
-          return;
-        }
-
-        try {
-          await navigator.share({
-            files: [file],
-            title: "Twibbon Saya",
-            text: "Lihat twibbon buatan saya!"
-          });
-        } catch (err) {
-          alert("Gagal membagikan: " + err.message);
-        }
-      });
-    });
-
-    animate();
   </script>
 </body>
 </html>
