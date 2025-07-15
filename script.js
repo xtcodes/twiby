@@ -111,6 +111,7 @@ function loadImageFromFile(file) {
       downloadBtn.disabled = false;
       shareBtn.disabled = !navigator.canShare;
       canvas.style.display = "block";
+      dropZone.querySelector("p").style.display = "none";
     };
     img.src = event.target.result;
   };
@@ -137,6 +138,7 @@ dropZone.addEventListener("drop", (e) => {
 });
 
 canvas.addEventListener("pointerdown", (e) => {
+  if (!imageLoaded) return;
   canvas.setPointerCapture(e.pointerId);
   state.pointers.push(e);
   if (state.pointers.length === 1) {
@@ -157,6 +159,7 @@ canvas.addEventListener("pointerdown", (e) => {
 });
 
 canvas.addEventListener("pointermove", (e) => {
+  if (!imageLoaded) return;
   for (let i = 0; i < state.pointers.length; i++) {
     if (state.pointers[i].pointerId === e.pointerId) {
       state.pointers[i] = e;
@@ -182,10 +185,12 @@ canvas.addEventListener("pointermove", (e) => {
 });
 
 canvas.addEventListener("pointerup", (e) => {
+  if (!imageLoaded) return;
   state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
 });
 
 canvas.addEventListener("pointercancel", (e) => {
+  if (!imageLoaded) return;
   state.pointers = state.pointers.filter(p => p.pointerId !== e.pointerId);
 });
 
