@@ -122,6 +122,7 @@ fileInput.addEventListener("change", (e) => {
   loadImageFromFile(e.target.files[0]);
 });
 
+dropZone.addEventListener("click", () => fileInput.click());
 dropZone.addEventListener("dragover", (e) => {
   e.preventDefault();
   dropZone.classList.add("dragover");
