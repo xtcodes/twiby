@@ -66,8 +66,8 @@
       right: 10px;
       width: 20px;
       height: 20px;
-      border: 3px solid #f1f1f1;
-      border-top: 3px solid #333;
+      border: 3px solid #ccc;
+      border-top: 3px solid #1e90ff;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       display: none;
@@ -85,6 +85,7 @@
   <div id="dropZone">
     <p>Klik atau tarik gambar ke sini</p>
     <canvas id="canvas" width="1000" height="1000"></canvas>
+    <div id="spinner"></div>
   </div>
 
   <input type="file" accept="image/*" id="fileInput" />
@@ -96,9 +97,9 @@
   </div>
 
   <img id="twibbon" src="twibbon.png" style="display:none" />
-  <div id="spinner"></div>
 
   <script>
+    // Semua variabel dan setup sebelumnya...
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     canvas.style.touchAction = "none";
@@ -108,8 +109,8 @@
     const twibbonImg = document.getElementById("twibbon");
     const downloadBtn = document.getElementById("downloadBtn");
     const shareBtn = document.getElementById("shareBtn");
-    const spinner = document.getElementById("spinner");
     const reloadBtn = document.getElementById("reloadBtn");
+    const spinner = document.getElementById("spinner");
 
     let userImg = null;
     let imageLoaded = false;
@@ -299,9 +300,10 @@
 
     downloadBtn.addEventListener("click", () => {
       downloadBtn.style.display = "none";
-      shareBtn.style.display = "inline-block";
       reloadBtn.style.display = "inline-block";
+
       if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
+
       spinner.style.display = "block";
       hideContent = true;
       typedLength = 0;
@@ -313,10 +315,16 @@
         targetOpacity = 1.0;
         draw();
         spinner.style.display = "none";
+
         const link = document.createElement("a");
         link.download = "twibbon.png";
         link.href = canvas.toDataURL("image/png");
         link.click();
+
+        // Deteksi dukungan share
+        if (navigator.canShare && navigator.canShare({ files: [new File([""], "test.png", { type: "image/png" })] })) {
+          shareBtn.style.display = "inline-block";
+        }
       }, 15000);
     });
 
@@ -328,13 +336,20 @@
 
     shareBtn.addEventListener("click", async () => {
       if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
+
       canvas.toBlob(async (blob) => {
         const file = new File([blob], "twibbon.png", { type: "image/png" });
+
+        if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
+          alert("Fitur bagikan tidak didukung di perangkat atau browser ini.");
+          return;
+        }
+
         try {
           await navigator.share({
             files: [file],
             title: "Twibbon Saya",
-            text: "Lihat twibbon buatan saya!",
+            text: "Lihat twibbon buatan saya!"
           });
         } catch (err) {
           alert("Gagal membagikan: " + err.message);
