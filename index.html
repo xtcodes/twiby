@@ -75,11 +75,31 @@
     const FADE_SPEED = 0.05;
     let hideTimeout = null;
 
+    // ANIMASI KETIK
+    let typingText = "Sedang diproses...";
+    let typedLength = 0;
+    let typingSpeed = 150; // ms
+    let lastTypingTime = 0;
+
     function draw() {
-      // Jika hideContent aktif, tampilkan latar abu-abu tanpa gambar
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       if (hideContent) {
         ctx.fillStyle = "#ccc";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Tampilkan animasi ketik teks
+        if (Date.now() - lastTypingTime > typingSpeed && typedLength < typingText.length) {
+          typedLength++;
+          lastTypingTime = Date.now();
+        }
+
+        const displayText = typingText.substring(0, typedLength);
+        ctx.fillStyle = "#444";
+        ctx.font = "bold 24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(displayText, canvas.width / 2, canvas.height / 2);
         return;
       }
 
@@ -215,6 +235,8 @@
 
       spinner.style.display = "block";
       hideContent = true;
+      typedLength = 0;
+      lastTypingTime = Date.now();
 
       setTimeout(() => {
         hideContent = false;
