@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twibbon Interaktif</title>
+  <title>Twibbon Interaktif - Sederhana</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     canvas {
@@ -28,26 +28,30 @@
     }
   </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center p-4 space-y-4 relative">
-  <h1 class="text-2xl font-bold">Twibbon Interaktif</h1>
+<body class="bg-white flex flex-col items-center p-6 space-y-4 text-center">
+  <h1 class="text-2xl font-semibold text-gray-800">Twibbon Sederhana</h1>
 
   <div class="relative">
-    <canvas id="canvas" width="500" height="500" class="border rounded shadow-md"></canvas>
+    <canvas id="canvas" width="500" height="500" class="border rounded shadow-sm"></canvas>
     <div id="spinner"></div>
   </div>
 
-  <input type="file" id="upload" accept="image/*" />
+  <!-- Tombol upload dengan input tersembunyi -->
+  <button id="uploadBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Unggah Gambar</button>
+  <input type="file" id="upload" accept="image/*" class="hidden" />
 
   <div class="space-x-2">
-    <button id="downloadBtn" disabled class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50">Unduh Hasil</button>
-    <button id="shareBtn" disabled class="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50">Bagikan</button>
+    <button id="downloadBtn" disabled class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50">Unduh Hasil</button>
+    <button id="shareBtn" disabled class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50">Bagikan</button>
   </div>
 
+  <!-- Twibbon gambar default (disisipkan di canvas, tidak ditampilkan langsung) -->
   <img id="twibbon" src="twibbon.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
 
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+    const uploadBtn = document.getElementById("uploadBtn");
     const upload = document.getElementById("upload");
     const twibbonImg = document.getElementById("twibbon");
     const downloadBtn = document.getElementById("downloadBtn");
@@ -75,10 +79,10 @@
     const FADE_SPEED = 0.05;
     let hideTimeout = null;
 
-    // ANIMASI KETIK
+    // Animasi mengetik
     let typingText = "Sedang diproses...";
     let typedLength = 0;
-    let typingSpeed = 150; // ms
+    let typingSpeed = 150;
     let lastTypingTime = 0;
 
     function draw() {
@@ -88,7 +92,6 @@
         ctx.fillStyle = "#ccc";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Tampilkan animasi ketik teks
         if (Date.now() - lastTypingTime > typingSpeed && typedLength < typingText.length) {
           typedLength++;
           lastTypingTime = Date.now();
@@ -128,6 +131,34 @@
       requestAnimationFrame(animate);
     }
 
+    uploadBtn.addEventListener("click", () => {
+      upload.click();
+    });
+
+    upload.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          userImg = img;
+          imageLoaded = true;
+
+          const scaleRatio = canvas.width / img.width;
+          state.scale = scaleRatio;
+          state.x = (canvas.width - img.width * scaleRatio) / 2;
+          state.y = (canvas.height - img.height * scaleRatio) / 2;
+
+          downloadBtn.disabled = false;
+          shareBtn.disabled = !navigator.canShare;
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
     function getDistance(p1, p2) {
       const dx = p2.clientX - p1.clientX;
       const dy = p2.clientY - p1.clientY;
@@ -149,31 +180,6 @@
         targetOpacity = 1.0;
       }, 300);
     }
-
-    upload.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          userImg = img;
-          imageLoaded = true;
-
-          const scaleRatio = canvas.width / img.width;
-          state.scale = scaleRatio;
-          const imgW = img.width * scaleRatio;
-          const imgH = img.height * scaleRatio;
-          state.x = (canvas.width - imgW) / 2;
-          state.y = (canvas.height - imgH) / 2;
-
-          downloadBtn.disabled = false;
-          shareBtn.disabled = !navigator.canShare;
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
 
     canvas.addEventListener("pointerdown", (e) => {
       canvas.setPointerCapture(e.pointerId);
