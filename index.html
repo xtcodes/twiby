@@ -18,7 +18,6 @@
     }
     canvas {
       width: 100%;
-      touch-action: none;
       background-color: #fff;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -84,6 +83,12 @@
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+
+    // ✅ Fix gesture mobile
+    canvas.style.touchAction = "none";
+    canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+    canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
     const uploadBtn = document.getElementById("uploadBtn");
     const upload = document.getElementById("upload");
     const twibbonImg = document.getElementById("twibbon");
