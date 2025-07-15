@@ -8,7 +8,7 @@
     body {
       font-family: sans-serif;
       background-color: #f9f9f9;
-      margin: 20px auto;
+      margin: 0;
       padding: 20px;
       text-align: center;
     }
@@ -32,7 +32,6 @@
       cursor: pointer;
       color: white;
     }
-    .upload { background-color: #7e57c2; }
     .download { background-color: #2196f3; }
     .share { background-color: #4caf50; }
     .button:disabled {
@@ -59,17 +58,38 @@
       flex-direction: column;
       align-items: center;
     }
+    .drop-zone {
+      width: 300px;
+      aspect-ratio: 1 / 1;
+      border: 2px dashed #aaa;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      background-color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .drop-zone.dragover {
+      background-color: #e0f7fa;
+    }
+    .drop-zone p {
+      color: #666;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Twibbon Ringan</h1>
+    <div id="dropZone" class="drop-zone">
+      <p>Tarik dan lepas gambar di sini</p>
+    </div>
     <div style="position: relative;">
       <canvas id="canvas" width="500" height="500"></canvas>
       <div id="spinner"></div>
     </div>
-    <button id="uploadBtn" class="button upload">Unggah Gambar</button>
-    <input type="file" id="upload" accept="image/*" style="display:none" />
     <div>
       <button id="downloadBtn" class="button download" disabled>Unduh Hasil</button>
       <button id="shareBtn" class="button share" disabled>Bagikan</button>
@@ -83,8 +103,7 @@
     canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
     canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
-    const uploadBtn = document.getElementById("uploadBtn");
-    const upload = document.getElementById("upload");
+    const dropZone = document.getElementById("dropZone");
     const twibbonImg = document.getElementById("twibbon");
     const downloadBtn = document.getElementById("downloadBtn");
     const shareBtn = document.getElementById("shareBtn");
@@ -120,16 +139,13 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (hideContent) {
         ctx.fillStyle = "#ccc";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
         if (Date.now() - lastTypingTime > typingSpeed && typedLength < typingText.length) {
           typedLength++;
           lastTypingTime = Date.now();
         }
-
         const displayText = typingText.substring(0, typedLength);
         ctx.fillStyle = "#444";
         ctx.font = "bold 24px sans-serif";
@@ -138,22 +154,18 @@
         ctx.fillText(displayText, canvas.width / 2, canvas.height / 2);
         return;
       }
-
       ctx.fillStyle = "white";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       if (userImg) {
         const w = userImg.width * state.scale;
         const h = userImg.height * state.scale;
         ctx.drawImage(userImg, state.x, state.y, w, h);
       }
-
       if (imageLoaded) {
         twibbonOpacity += (targetOpacity - twibbonOpacity) * FADE_SPEED;
       } else {
         twibbonOpacity = 1.0;
       }
-
       ctx.globalAlpha = twibbonOpacity;
       ctx.drawImage(twibbonImg, 0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1.0;
@@ -163,29 +175,6 @@
       draw();
       requestAnimationFrame(animate);
     }
-
-    uploadBtn.addEventListener("click", () => upload.click());
-
-    upload.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          userImg = img;
-          imageLoaded = true;
-          const scaleRatio = canvas.width / img.width;
-          state.scale = scaleRatio;
-          state.x = (canvas.width - img.width * scaleRatio) / 2;
-          state.y = (canvas.height - img.height * scaleRatio) / 2;
-          downloadBtn.disabled = false;
-          shareBtn.disabled = !navigator.canShare;
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
 
     function getDistance(p1, p2) {
       const dx = p2.clientX - p1.clientX;
@@ -206,6 +195,38 @@
       if (hideTimeout) clearTimeout(hideTimeout);
       hideTimeout = setTimeout(() => targetOpacity = 1.0, 300);
     }
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          userImg = img;
+          imageLoaded = true;
+          const scaleRatio = canvas.width / img.width;
+          state.scale = scaleRatio;
+          state.x = (canvas.width - img.width * scaleRatio) / 2;
+          state.y = (canvas.height - img.height * scaleRatio) / 2;
+          downloadBtn.disabled = false;
+          shareBtn.disabled = !navigator.canShare;
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
 
     canvas.addEventListener("pointerdown", (e) => {
       canvas.setPointerCapture(e.pointerId);
@@ -234,7 +255,6 @@
           break;
         }
       }
-
       if (state.pointers.length === 1) {
         const dx = e.clientX - state.lastX;
         const dy = e.clientY - state.lastY;
@@ -250,7 +270,6 @@
         state.x = state.initialX - state.zoomAnchor.x * (newScale - state.initialScale);
         state.y = state.initialY - state.zoomAnchor.y * (newScale - state.initialScale);
       }
-
       triggerTwibbonFade();
     });
 
@@ -264,12 +283,10 @@
 
     downloadBtn.addEventListener("click", () => {
       if (!userImg) return alert("Silakan unggah gambar terlebih dahulu.");
-
       spinner.style.display = "block";
       hideContent = true;
       typedLength = 0;
       lastTypingTime = Date.now();
-
       setTimeout(() => {
         hideContent = false;
         spinner.style.display = "none";
