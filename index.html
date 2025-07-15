@@ -21,6 +21,7 @@
       background-color: #fff;
       border: 1px solid #ccc;
       border-radius: 8px;
+      touch-action: none;
     }
     .button {
       padding: 10px 16px;
@@ -63,28 +64,21 @@
 <body>
   <div class="container">
     <h1>Twibbon Ringan</h1>
-
     <div style="position: relative;">
       <canvas id="canvas" width="500" height="500"></canvas>
       <div id="spinner"></div>
     </div>
-
     <button id="uploadBtn" class="button upload">Unggah Gambar</button>
     <input type="file" id="upload" accept="image/*" style="display:none" />
-
     <div>
       <button id="downloadBtn" class="button download" disabled>Unduh Hasil</button>
       <button id="shareBtn" class="button share" disabled>Bagikan</button>
     </div>
-
     <img id="twibbon" src="twibbon.png" alt="Twibbon" style="display:none" crossorigin="anonymous"/>
   </div>
-
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-
-    // ✅ Fix gesture mobile
     canvas.style.touchAction = "none";
     canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
     canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
@@ -109,6 +103,8 @@
       pointers: [],
       startDist: 0,
       initialScale: 1,
+      initialX: 0,
+      initialY: 0,
       zoomAnchor: { x: 0, y: 0 }
     };
 
@@ -220,6 +216,8 @@
       } else if (state.pointers.length === 2) {
         state.startDist = getDistance(state.pointers[0], state.pointers[1]);
         state.initialScale = state.scale;
+        state.initialX = state.x;
+        state.initialY = state.y;
         const midpoint = getMidpoint(state.pointers[0], state.pointers[1]);
         const rect = canvas.getBoundingClientRect();
         state.zoomAnchor = {
@@ -248,11 +246,9 @@
         const newDist = getDistance(state.pointers[0], state.pointers[1]);
         const scaleFactor = newDist / state.startDist;
         const newScale = state.initialScale * scaleFactor;
-        const dx = state.zoomAnchor.x * (newScale - state.scale);
-        const dy = state.zoomAnchor.y * (newScale - state.scale);
-        state.x -= dx;
-        state.y -= dy;
         state.scale = newScale;
+        state.x = state.initialX - state.zoomAnchor.x * (newScale - state.initialScale);
+        state.y = state.initialY - state.zoomAnchor.y * (newScale - state.initialScale);
       }
 
       triggerTwibbonFade();
@@ -277,7 +273,6 @@
       setTimeout(() => {
         hideContent = false;
         spinner.style.display = "none";
-
         const link = document.createElement("a");
         link.download = "twibbon.png";
         link.href = canvas.toDataURL("image/png");
