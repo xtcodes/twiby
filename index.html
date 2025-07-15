@@ -56,6 +56,12 @@
       color: white;
       cursor: pointer;
     }
+    .download { 
+      background-color: #2196f3; 
+    }
+    .share { 
+      background-color: #4caf50; 
+    }
     button:disabled {
       background: #aaa;
       cursor: not-allowed;
@@ -89,8 +95,8 @@
   </div>
   <input type="file" accept="image/*" id="fileInput" />
   <div id="controls">
-    <button id="downloadBtn" disabled>Unduh</button>
-    <button id="shareBtn" disabled>Bagikan</button>
+    <button class="download" id="downloadBtn" disabled>Unduh</button>
+    <button class="share" id="shareBtn" disabled>Bagikan</button>
   </div>
   <img id="twibbon" src="twibbon.png" style="display:none" />
   <script src="script.js"></script>
