@@ -61,7 +61,7 @@
       cursor: not-allowed;
     }
     #spinner {
-      position: fixed;
+      position: absolute;
       bottom: 10px;
       right: 10px;
       width: 20px;
@@ -85,6 +85,7 @@
   <div id="dropZone">
     <p>Klik atau tarik gambar ke sini</p>
     <canvas id="canvas" width="1000" height="1000"></canvas>
+    <div id="spinner"></div>
   </div>
   <input type="file" accept="image/*" id="fileInput" />
   <div id="controls">
@@ -92,7 +93,6 @@
     <button id="shareBtn" disabled>Bagikan</button>
   </div>
   <img id="twibbon" src="twibbon.png" style="display:none" />
-  <div id="spinner"></div>
   <script src="script.js"></script>
 </body>
 </html>
