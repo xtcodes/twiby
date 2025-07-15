@@ -201,8 +201,10 @@ downloadBtn.addEventListener("click", () => {
   hideContent = true;
   typedLength = 0;
   lastTypingTime = Date.now();
+
   setTimeout(() => {
     hideContent = false;
+    draw(); // pastikan canvas menggambar ulang sebelum diunduh
     spinner.style.display = "none";
     const link = document.createElement("a");
     link.download = "twibbon.png";
