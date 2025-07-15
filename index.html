@@ -24,23 +24,26 @@
       touch-action: none;
     }
     input[type="file"] {
-      margin: 1rem 0;
+      display: none;
     }
     button {
       padding: 0.5rem 1rem;
       font-size: 1rem;
       cursor: pointer;
+      margin: 0.5rem;
     }
   </style>
 </head>
 <body>
   <h1>Aplikasi Twibbon Interaktif</h1>
+
   <div class="canvas-container">
     <canvas id="twibbonCanvas" width="500" height="500"></canvas>
   </div>
+
   <br />
   <input type="file" id="uploadImage" accept="image/*" />
-  <br />
+  <button id="selectImageButton">Pilih Foto</button>
   <button onclick="downloadImage()">Unduh Hasil</button>
 
   <script>
@@ -48,7 +51,7 @@
     const ctx = canvas.getContext('2d');
 
     const twibbon = new Image();
-    twibbon.src = 'twibbon.png'; // Ganti dengan URL twibbon asli
+    twibbon.src = 'twibbon.png'; // Ganti URL twibbon jika perlu
 
     let userImage = null;
     let scale = 1;
@@ -160,6 +163,12 @@
       draw();
     });
 
+    // Tombol "Pilih Foto" klik -> buka file picker
+    document.getElementById('selectImageButton').addEventListener('click', () => {
+      document.getElementById('uploadImage').click();
+    });
+
+    // Saat file dipilih
     document.getElementById('uploadImage').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
