@@ -2,23 +2,51 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twibbon Interaktif - Sederhana</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Twibbon Ringan</title>
   <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
     canvas {
       width: 100%;
       touch-action: none;
-      background-color: white;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .button {
+      padding: 10px 16px;
+      margin: 6px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+    }
+    .upload { background-color: #7e57c2; }
+    .download { background-color: #2196f3; }
+    .share { background-color: #4caf50; }
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     #spinner {
       position: absolute;
-      bottom: 16px;
-      right: 16px;
+      bottom: 20px;
+      right: 20px;
       width: 24px;
       height: 24px;
       border: 3px solid rgba(0,0,0,0.2);
-      border-top: 3px solid gray;
+      border-top: 3px solid #555;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       display: none;
@@ -26,27 +54,32 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
   </style>
 </head>
-<body class="bg-white flex flex-col items-center p-6 space-y-4 text-center">
-  <h1 class="text-2xl font-semibold text-gray-800">Twibbon Sederhana</h1>
+<body>
+  <div class="container">
+    <h1>Twibbon Ringan</h1>
 
-  <div class="relative">
-    <canvas id="canvas" width="500" height="500" class="border rounded shadow-sm"></canvas>
-    <div id="spinner"></div>
+    <div style="position: relative;">
+      <canvas id="canvas" width="500" height="500"></canvas>
+      <div id="spinner"></div>
+    </div>
+
+    <button id="uploadBtn" class="button upload">Unggah Gambar</button>
+    <input type="file" id="upload" accept="image/*" style="display:none" />
+
+    <div>
+      <button id="downloadBtn" class="button download" disabled>Unduh Hasil</button>
+      <button id="shareBtn" class="button share" disabled>Bagikan</button>
+    </div>
+
+    <img id="twibbon" src="twibbon.png" alt="Twibbon" style="display:none" crossorigin="anonymous"/>
   </div>
-
-  <!-- Tombol upload dengan input tersembunyi -->
-  <button id="uploadBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Unggah Gambar</button>
-  <input type="file" id="upload" accept="image/*" class="hidden" />
-
-  <div class="space-x-2">
-    <button id="downloadBtn" disabled class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50">Unduh Hasil</button>
-    <button id="shareBtn" disabled class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50">Bagikan</button>
-  </div>
-
-  <!-- Twibbon gambar default (disisipkan di canvas, tidak ditampilkan langsung) -->
-  <img id="twibbon" src="twibbon.png" alt="Twibbon" class="hidden" crossorigin="anonymous" />
 
   <script>
     const canvas = document.getElementById("canvas");
@@ -79,7 +112,6 @@
     const FADE_SPEED = 0.05;
     let hideTimeout = null;
 
-    // Animasi mengetik
     let typingText = "Sedang diproses...";
     let typedLength = 0;
     let typingSpeed = 150;
@@ -131,26 +163,21 @@
       requestAnimationFrame(animate);
     }
 
-    uploadBtn.addEventListener("click", () => {
-      upload.click();
-    });
+    uploadBtn.addEventListener("click", () => upload.click());
 
     upload.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
           userImg = img;
           imageLoaded = true;
-
           const scaleRatio = canvas.width / img.width;
           state.scale = scaleRatio;
           state.x = (canvas.width - img.width * scaleRatio) / 2;
           state.y = (canvas.height - img.height * scaleRatio) / 2;
-
           downloadBtn.disabled = false;
           shareBtn.disabled = !navigator.canShare;
         };
@@ -176,9 +203,7 @@
       if (!imageLoaded) return;
       targetOpacity = 0.4;
       if (hideTimeout) clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => {
-        targetOpacity = 1.0;
-      }, 300);
+      hideTimeout = setTimeout(() => targetOpacity = 1.0, 300);
     }
 
     canvas.addEventListener("pointerdown", (e) => {
