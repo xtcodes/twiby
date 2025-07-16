@@ -31,6 +31,11 @@
       cursor: pointer;
       margin: 0.5rem;
     }
+    .green {background-color: #04AA6D;} /* Green */
+    .blue {background-color: #008CBA;} /* Blue */
+    .red {background-color: #f44336;} /* Red */
+    .gray {background-color: #e7e7e7; color: black;} /* Gray */
+    .black {background-color: #555555;} /* Black */
     .overlay {
       position: absolute;
       top: 0; left: 0;
@@ -91,9 +96,9 @@
   <input type="file" id="uploadImage" accept="image/*" />
   <input type="file" id="uploadTwibbon" accept="image/png" />
 
-  <button id="selectImageButton">Pilih Foto</button>
-  <button id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
-  <button onclick="downloadImage()">Unduh Hasil</button>
+  <button class="gray" id="selectImageButton">Pilih Foto</button>
+  <button class="gray" id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
+  <button class="green" onclick="downloadImage()">Unduh Hasil</button>
 
   <div class="notification" id="notification"></div>
 
