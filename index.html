@@ -25,7 +25,7 @@
     input[type="file"] {
       display: none;
     }
-    button {
+    .btn {
       border: none;
       color: white;
       padding: 0.5rem 1rem;
@@ -100,9 +100,9 @@
   <input type="file" id="uploadImage" accept="image/*" />
   <input type="file" id="uploadTwibbon" accept="image/png" />
 
-  <button class="gray" id="selectImageButton">Pilih Foto</button>
-  <button class="gray" id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
-  <button class="green" onclick="downloadImage()">Unduh Hasil</button>
+  <button class="btn gray" id="selectImageButton">Pilih Foto</button>
+  <button class="btn gray" id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
+  <button class="btn green" onclick="downloadImage()">Unduh Hasil</button>
 
   <div class="notification" id="notification"></div>
 
