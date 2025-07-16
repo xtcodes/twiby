@@ -16,6 +16,7 @@
       position: relative;
       display: inline-block;
       background: #fff;
+      border: 1px solid #ccc;
       touch-action: none;
     }
     canvas {
@@ -104,7 +105,7 @@
     const notification = document.getElementById('notification');
 
     const twibbon = new Image();
-    twibbon.onload = () => draw(); // ✅ Tetapkan sebelum src
+    twibbon.onload = () => draw();
     twibbon.src = 'twibbon.png';
 
     let userImage = null;
@@ -129,6 +130,24 @@
       ctx.globalAlpha = (isInteracting && userImage) ? 0.5 : 1;
       ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = 1;
+    }
+
+    function drawWatermark() {
+      const text = "#XTCODES";
+      const fontSize = 16;
+      ctx.font = `${fontSize}px sans-serif`;
+      const textWidth = ctx.measureText(text).width;
+      const padding = 8;
+      const boxWidth = textWidth + padding * 2;
+      const boxHeight = fontSize + padding * 2;
+      const x = canvas.width - boxWidth - 10;
+      const y = canvas.height - boxHeight - 10;
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.fillRect(x, y, boxWidth, boxHeight);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(text, x + padding, y + fontSize + padding - 2);
     }
 
     function getDistance(p1, p2) {
@@ -273,7 +292,7 @@
             showNotification("❗ Twibbon harus memiliki ruang transparan!", "error");
             return;
           }
-          twibbon.onload = () => draw(); // ✅ Pastikan draw dipanggil setelah load
+          twibbon.onload = () => draw();
           twibbon.src = img.src;
         };
         img.src = event.target.result;
@@ -290,11 +309,14 @@
       overlay.style.display = 'flex';
 
       setTimeout(() => {
-        overlay.style.display = 'none';
+        draw();           // Gambar ulang
+        drawWatermark();  // Tambahkan watermark
         const link = document.createElement('a');
         link.download = 'twibbon.png';
         link.href = canvas.toDataURL();
         link.click();
+        draw(); // Kembalikan canvas ke tanpa watermark
+        overlay.style.display = 'none';
         showNotification("✅ Unduhan selesai!");
       }, 15000);
     }
