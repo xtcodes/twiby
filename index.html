@@ -16,6 +16,7 @@
       position: relative;
       display: inline-block;
       background: #fff;
+      border: 1px solid #ccc;
       touch-action: none;
     }
     canvas {
@@ -88,11 +89,9 @@
   </div>
 
   <br />
-  <!-- Input tersembunyi -->
   <input type="file" id="uploadImage" accept="image/*" />
-  <input type="file" id="uploadTwibbon" accept="image/*" />
+  <input type="file" id="uploadTwibbon" accept="image/png" />
 
-  <!-- Tombol kontrol -->
   <button id="selectImageButton">Pilih Foto</button>
   <button id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
   <button onclick="downloadImage()">Unduh Hasil</button>
@@ -208,6 +207,15 @@
       draw();
     });
 
+    function showNotification(text, type = "success") {
+      notification.textContent = text;
+      notification.style.display = 'block';
+      notification.style.backgroundColor = type === "error" ? "#f44336" : "#4caf50";
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 3000);
+    }
+
     document.getElementById('selectImageButton').addEventListener('click', () => {
       document.getElementById('uploadImage').click();
     });
@@ -238,27 +246,39 @@
     document.getElementById('uploadTwibbon').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
+
+      if (!file.type.includes('png')) {
+        showNotification("❗ Hanya file PNG yang mendukung transparansi.", "error");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = function (event) {
         const img = new Image();
         img.onload = function () {
+          const tempCanvas = document.createElement('canvas');
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCanvas.width = img.width;
+          tempCanvas.height = img.height;
+          tempCtx.drawImage(img, 0, 0);
+          const data = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
+          let hasTransparency = false;
+          for (let i = 3; i < data.length; i += 4) {
+            if (data[i] < 255) {
+              hasTransparency = true;
+              break;
+            }
+          }
+          if (!hasTransparency) {
+            showNotification("❗ Twibbon harus memiliki ruang transparan!", "error");
+            return;
+          }
           twibbon.src = img.src;
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
-
-    twibbon.onload = draw;
-
-    function showNotification(text, type = "success") {
-      notification.textContent = text;
-      notification.style.display = 'block';
-      notification.style.backgroundColor = type === "error" ? "#f44336" : "#4caf50";
-      setTimeout(() => {
-        notification.style.display = 'none';
-      }, 3000);
-    }
 
     function downloadImage() {
       if (!userImage) {
