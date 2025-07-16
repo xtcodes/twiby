@@ -6,27 +6,17 @@
   <title>Aplikasi Twibbon Interaktif</title>
   <style>
     body {
-      margin: 0;
-      padding: 2rem;
-      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: sans-serif;
       text-align: center;
       background: #f4f4f4;
-    }
-    main {
-      width: 600px;
-      margin: 5rem auto;
+      margin: 0;
       padding: 2rem;
-      background-color: #fdfdff;
-      border-radius: 0.5em;
-      box-shadow: 2px 3px 7px 2px rgba(0,0,0,0.02);
-    }
-    a:link, a:visited {
-      color: #38488f;
-      text-decoration: none;
     }
     .canvas-container {
       position: relative;
       display: inline-block;
+      background: #fff;
+      border: 1px solid #ccc;
       touch-action: none;
     }
     canvas {
@@ -37,21 +27,11 @@
       display: none;
     }
     button {
-      background-color: #04AA6D; /* Green */
-      border: none;
-      border-radius: 4px;
-      color: white;
       padding: 0.5rem 1rem;
       font-size: 1rem;
       cursor: pointer;
       margin: 0.5rem;
-      transition-duration: 0.4s;
     }
-    button:hover {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .black {background-color: #555555;} /* Black */
     .overlay {
       position: absolute;
       top: 0; left: 0;
@@ -95,16 +75,9 @@
       display: none;
       z-index: 20;
     }
-    @media (max-width: 700px) {
-      main {
-        margin: 0 auto;
-        width: auto;
-      }
-    }
   </style>
 </head>
 <body>
-  <main>
   <h1>Aplikasi Twibbon Interaktif</h1>
 
   <div class="canvas-container" id="canvasWrapper">
@@ -115,18 +88,21 @@
     </div>
   </div>
 
-  <p>
+  <br />
   <input type="file" id="uploadImage" accept="image/*" />
   <input type="file" id="uploadTwibbon" accept="image/png" />
 
-  <button class="black" id="selectImageButton">Pilih Foto</button>
-  <button class="black" id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
+  <button id="selectImageButton">Pilih Foto</button>
+  <button id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
   <button onclick="downloadImage()">Unduh Hasil</button>
+
+  <p id="altDownloadText" style="display:none; margin-top: 1rem;">
+    Jika unduhan tidak dimulai otomatis,
+    <a id="altDownloadLink" href="#" download="twibbon.png">klik di sini</a>.
   </p>
-    
+
   <div class="notification" id="notification"></div>
-  </main>
-  
+
   <script>
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
@@ -162,7 +138,7 @@
     }
 
     function drawWatermark() {
-      const text = "#XTCODES";
+      const text = "© TwibbonApp";
       const fontSize = 16;
       ctx.font = `${fontSize}px sans-serif`;
       const textWidth = ctx.measureText(text).width;
@@ -338,13 +314,19 @@
       overlay.style.display = 'flex';
 
       setTimeout(() => {
-        draw();           // Gambar ulang
-        drawWatermark();  // Tambahkan watermark
+        draw();
+        drawWatermark();
         const link = document.createElement('a');
         link.download = 'twibbon.png';
         link.href = canvas.toDataURL();
         link.click();
-        draw(); // Kembalikan canvas ke tanpa watermark
+
+        // Alternatif jika unduh otomatis gagal
+        const altLink = document.getElementById('altDownloadLink');
+        altLink.href = canvas.toDataURL();
+        document.getElementById('altDownloadText').style.display = 'block';
+
+        draw(); // hapus watermark kembali
         overlay.style.display = 'none';
         showNotification("✅ Unduhan selesai!");
       }, 15000);
