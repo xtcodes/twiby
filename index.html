@@ -32,13 +32,50 @@
       cursor: pointer;
       margin: 0.5rem;
     }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(200, 200, 200, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 1.2rem;
+      color: #333;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .spinner {
+      border: 4px solid #ccc;
+      border-top: 4px solid #333;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <h1>Aplikasi Twibbon Interaktif</h1>
 
-  <div class="canvas-container">
+  <div class="canvas-container" id="canvasWrapper">
     <canvas id="twibbonCanvas" width="500" height="500"></canvas>
+    <div class="overlay" id="overlay" style="display: none;">
+      <div>Sedang proses...</div>
+      <div class="spinner"></div>
+    </div>
   </div>
 
   <br />
@@ -50,8 +87,9 @@
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
 
+    const overlay = document.getElementById('overlay');
     const twibbon = new Image();
-    twibbon.src = 'twibbon.png'; // Ganti URL twibbon jika perlu
+    twibbon.src = 'twibbon.png'; // Ganti URL twibbon
 
     let userImage = null;
     let scale = 1;
@@ -163,12 +201,10 @@
       draw();
     });
 
-    // Tombol "Pilih Foto" klik -> buka file picker
     document.getElementById('selectImageButton').addEventListener('click', () => {
       document.getElementById('uploadImage').click();
     });
 
-    // Saat file dipilih
     document.getElementById('uploadImage').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -190,10 +226,22 @@
     twibbon.onload = draw;
 
     function downloadImage() {
-      const link = document.createElement('a');
-      link.download = 'twibbon.png';
-      link.href = canvas.toDataURL();
-      link.click();
+      if (!userImage) {
+        alert("Silakan unggah gambar terlebih dahulu.");
+        return;
+      }
+
+      overlay.style.display = 'flex';
+
+      // Tunda 15 detik sebelum unduh
+      setTimeout(() => {
+        overlay.style.display = 'none';
+
+        const link = document.createElement('a');
+        link.download = 'twibbon.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      }, 15000);
     }
   </script>
 </body>
