@@ -16,6 +16,7 @@
       position: relative;
       display: inline-block;
       background: #fff;
+      border: 1px solid #ccc;
       touch-action: none;
     }
     canvas {
@@ -92,7 +93,7 @@
   <button id="selectImageButton">Pilih Foto</button>
   <button onclick="downloadImage()">Unduh Hasil</button>
 
-  <div class="notification" id="notification">✅ Unduhan selesai!</div>
+  <div class="notification" id="notification"></div>
 
   <script>
     const canvas = document.getElementById('twibbonCanvas');
@@ -226,9 +227,10 @@
 
     twibbon.onload = draw;
 
-    function showNotification(text) {
+    function showNotification(text, type = "success") {
       notification.textContent = text;
       notification.style.display = 'block';
+      notification.style.backgroundColor = type === "error" ? "#f44336" : "#4caf50";
       setTimeout(() => {
         notification.style.display = 'none';
       }, 3000);
@@ -236,7 +238,7 @@
 
     function downloadImage() {
       if (!userImage) {
-        alert("Silakan unggah gambar terlebih dahulu.");
+        showNotification("❗ Silakan unggah gambar terlebih dahulu.", "error");
         return;
       }
 
