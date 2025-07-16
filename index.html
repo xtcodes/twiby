@@ -16,6 +16,7 @@
       position: relative;
       display: inline-block;
       background: #fff;
+      border: 1px solid #ccc;
       touch-action: none;
     }
     canvas {
@@ -25,25 +26,12 @@
     input[type="file"] {
       display: none;
     }
-    .btn {
-      border: none;
-      color: white;
+    button {
       padding: 0.5rem 1rem;
       font-size: 1rem;
       cursor: pointer;
       margin: 0.5rem;
-      text-align: center;
-      text-decoration: none;
     }
-    .btn:hover {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .green {background-color: #04AA6D;} /* Green */
-    .blue {background-color: #008CBA;} /* Blue */
-    .red {background-color: #f44336;} /* Red */
-    .gray {background-color: #e7e7e7; color: black;} /* Gray */
-    .black {background-color: #555555;} /* Black */
     .overlay {
       position: absolute;
       top: 0; left: 0;
@@ -104,9 +92,9 @@
   <input type="file" id="uploadImage" accept="image/*" />
   <input type="file" id="uploadTwibbon" accept="image/png" />
 
-  <button class="btn gray" id="selectImageButton">Pilih Foto</button>
-  <button class="btn gray" id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
-  <button class="btn green" onclick="downloadImage()">Unduh Hasil</button>
+  <button id="selectImageButton">Pilih Foto</button>
+  <button id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
+  <button onclick="downloadImage()">Unduh Hasil</button>
 
   <div class="notification" id="notification"></div>
 
