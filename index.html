@@ -105,6 +105,7 @@
     const notification = document.getElementById('notification');
 
     const twibbon = new Image();
+    twibbon.onload = () => draw(); // ✅ Tetapkan sebelum src
     twibbon.src = 'twibbon.png';
 
     let userImage = null;
@@ -273,6 +274,7 @@
             showNotification("❗ Twibbon harus memiliki ruang transparan!", "error");
             return;
           }
+          twibbon.onload = () => draw(); // ✅ Pastikan draw dipanggil setelah load
           twibbon.src = img.src;
         };
         img.src = event.target.result;
