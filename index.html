@@ -89,8 +89,13 @@
   </div>
 
   <br />
+  <!-- Input tersembunyi -->
   <input type="file" id="uploadImage" accept="image/*" />
+  <input type="file" id="uploadTwibbon" accept="image/*" />
+
+  <!-- Tombol kontrol -->
   <button id="selectImageButton">Pilih Foto</button>
+  <button id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
   <button onclick="downloadImage()">Unduh Hasil</button>
 
   <div class="notification" id="notification"></div>
@@ -102,7 +107,7 @@
     const notification = document.getElementById('notification');
 
     const twibbon = new Image();
-    twibbon.src = 'twibbon.png'; // Ganti jika perlu
+    twibbon.src = 'twibbon.png';
 
     let userImage = null;
     let scale = 1;
@@ -208,6 +213,10 @@
       document.getElementById('uploadImage').click();
     });
 
+    document.getElementById('selectTwibbonButton').addEventListener('click', () => {
+      document.getElementById('uploadTwibbon').click();
+    });
+
     document.getElementById('uploadImage').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -219,6 +228,22 @@
           scale = 1;
           position = { x: 0, y: 0 };
           draw();
+          document.getElementById('selectImageButton').style.display = 'none';
+          document.getElementById('selectTwibbonButton').style.display = 'inline-block';
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('uploadTwibbon').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          twibbon.src = img.src;
         };
         img.src = event.target.result;
       };
@@ -246,12 +271,10 @@
 
       setTimeout(() => {
         overlay.style.display = 'none';
-
         const link = document.createElement('a');
         link.download = 'twibbon.png';
         link.href = canvas.toDataURL();
         link.click();
-
         showNotification("✅ Unduhan selesai!");
       }, 15000);
     }
