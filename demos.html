@@ -66,17 +66,17 @@
   </style>
 </head>
 <body>
-  <h1>Aplikasi Twibbon Interaktif</h1>
+  <h1>Aplikasi Twibbon</h1>
   <div class="canvas-container" id="canvasWrapper">
     <canvas id="twibbonCanvas" width="500" height="500"></canvas>
     <div id="overlay"><span>Sedang proses...</span></div>
   </div>
-  <br />
+  <p>
   <button onclick="document.getElementById('uploadImage').click()">Unggah Gambar</button>
   <button id="twibbonButton" onclick="document.getElementById('uploadTwibbon').click()" style="display: none">Pilih Twibbon</button>
   <input type="file" id="uploadImage" accept="image/*" />
   <input type="file" id="uploadTwibbon" accept="image/png" />
-  <br />
+  </p>
   <button onclick="downloadImage()">Unduh Hasil</button>
   <p id="altDownloadText">
     Jika unduhan tidak dimulai otomatis,
