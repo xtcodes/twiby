@@ -45,8 +45,12 @@
       cursor: pointer;
       margin: 0.5rem;
     }
-    .download {background-color: #04AA6D;} /* Green */
-    .upload {background-color: #555555;} /* Black */
+    .download {
+      background-color: #04AA6D;
+    } /* Green */
+    .upload {
+      background-color: #555555;
+    } /* Black */
     .overlay {
       position: absolute;
       top: 0; left: 0;
@@ -295,7 +299,7 @@
       if (!file) return;
 
       if (!file.type.includes('png')) {
-        showNotification("❗ Hanya file PNG yang mendukung transparansi.", "error");
+        showNotification("Hanya file PNG yang mendukung transparansi.", "error");
         return;
       }
 
@@ -317,7 +321,7 @@
             }
           }
           if (!hasTransparency) {
-            showNotification("❗ Twibbon harus memiliki ruang transparan!", "error");
+            showNotification("Twibbon harus memiliki ruang transparan!", "error");
             return;
           }
           twibbon.onload = () => draw();
@@ -330,7 +334,7 @@
 
     function downloadImage() {
       if (!userImage) {
-        showNotification("❗ Silakan unggah gambar terlebih dahulu.", "error");
+        showNotification("Silakan unggah gambar terlebih dahulu!.", "error");
         return;
       }
 
@@ -351,7 +355,7 @@
 
         draw(); // hapus watermark kembali
         overlay.style.display = 'none';
-        showNotification("✅ Unduhan selesai!");
+        showNotification("Unduhan selesai!");
       }, 15000);
     }
   </script>
