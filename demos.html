@@ -81,7 +81,7 @@
   </div>
   <br />
   <input type="file" id="uploadImage" accept="image/*" />
-  <input type="file" id="uploadTwibbon" accept="image/png" style="display: none" />
+  <input type="file" id="uploadTwibbon" accept="image/png" style="display: none;" />
   <br />
   <button onclick="downloadImage()">Unduh Hasil</button>
   <p id="altDownloadText" style="display:none; margin-top: 1rem;">
@@ -89,6 +89,7 @@
     <a id="altDownloadLink" href="#" download="twibbon.png">klik di sini</a>.
   </p>
   <div id="notification"></div>
+
   <script>
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
@@ -98,9 +99,11 @@
     const uploadImageInput = document.getElementById('uploadImage');
     const uploadTwibbonInput = document.getElementById('uploadTwibbon');
 
-    let twibbon = null;
-    let userImage = null;
+    let twibbon = new Image();
+    twibbon.src = 'twibbon.png'; // default
+    twibbon.onload = draw;
 
+    let userImage = null;
     let scale = 1;
     let position = { x: 0, y: 0 };
     let isDragging = false;
