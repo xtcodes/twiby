@@ -37,11 +37,15 @@
       display: none;
     }
     button {
+      border: none;
+      color: white;
       padding: 0.5rem 1rem;
       font-size: 1rem;
       cursor: pointer;
       margin: 0.5rem;
     }
+    .upload {background-color: #04AA6D;} /* Green */
+    .download {background-color: #555555;} /* Black */
     .overlay {
       position: absolute;
       top: 0; left: 0;
@@ -109,9 +113,9 @@
   <input type="file" id="uploadImage" accept="image/*" />
   <input type="file" id="uploadTwibbon" accept="image/png" />
 
-  <button id="selectImageButton">Pilih Foto</button>
-  <button id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
-  <button onclick="downloadImage()">Unduh Hasil</button>
+  <button class="upload" id="selectImageButton">Pilih Foto</button>
+  <button class="upload" id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
+  <button class="download" onclick="downloadImage()">Unduh Hasil</button>
 
   <p id="altDownloadText" style="display:none; margin-top: 1rem;">
     Jika unduhan tidak dimulai otomatis,
