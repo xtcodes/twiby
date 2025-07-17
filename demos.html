@@ -23,6 +23,9 @@
       max-width: 100%;
       touch-action: none;
     }
+    input[type="file"] {
+      display: none;
+    }
     button {
       padding: 0.5rem 1rem;
       font-size: 1rem;
@@ -56,17 +59,9 @@
       display: none;
       z-index: 1000;
     }
-    #watermark {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.5);
-      color: white;
-      padding: 4px 8px;
-      font-size: 12px;
-      border-radius: 4px;
-      backdrop-filter: blur(3px);
+    #altDownloadText {
       display: none;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -75,16 +70,15 @@
   <div class="canvas-container" id="canvasWrapper">
     <canvas id="twibbonCanvas" width="500" height="500"></canvas>
     <div id="overlay"><span>Sedang proses...</span></div>
-    <div id="watermark">TwibbonApp</div>
   </div>
   <br />
-  <input type="file" id="uploadImage" accept="image/*" style="display:none" />
-  <input type="file" id="uploadTwibbon" accept="image/png" style="display:none" />
-  <button onclick="document.getElementById('uploadImage').click()" id="btnUploadImage">Unggah Gambar</button>
-  <button onclick="document.getElementById('uploadTwibbon').click()" id="btnUploadTwibbon" style="display:none">Pilih Twibbon</button>
+  <button onclick="document.getElementById('uploadImage').click()">Unggah Gambar</button>
+  <button id="twibbonButton" onclick="document.getElementById('uploadTwibbon').click()" style="display: none">Pilih Twibbon</button>
+  <input type="file" id="uploadImage" accept="image/*" />
+  <input type="file" id="uploadTwibbon" accept="image/png" />
   <br />
   <button onclick="downloadImage()">Unduh Hasil</button>
-  <p id="altDownloadText" style="display:none; margin-top: 1rem;">
+  <p id="altDownloadText">
     Jika unduhan tidak dimulai otomatis,
     <a id="altDownloadLink" href="#" download="twibbon.png">klik di sini</a>.
   </p>
@@ -93,13 +87,15 @@
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('overlay');
-    const watermark = document.getElementById('watermark');
     const notification = document.getElementById('notification');
     const uploadImageInput = document.getElementById('uploadImage');
     const uploadTwibbonInput = document.getElementById('uploadTwibbon');
+    const twibbonButton = document.getElementById('twibbonButton');
+
     let twibbon = new Image();
-    twibbon.src = 'twibbon.png'; // pastikan file ini tersedia di direktori
+    twibbon.src = 'twibbon.png';
     twibbon.onload = draw;
+
     let userImage = null;
     let scale = 1;
     let position = { x: 0, y: 0 };
@@ -121,7 +117,7 @@
       }, 3000);
     }
 
-    function draw() {
+    function draw(includeWatermark = false) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (userImage) {
         const dw = userImage.width * scale;
@@ -132,6 +128,13 @@
         ctx.globalAlpha = (isInteracting && userImage) ? 0.5 : 1;
         ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1;
+      }
+      if (includeWatermark) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(canvas.width - 120, canvas.height - 30, 110, 25);
+        ctx.fillStyle = "white";
+        ctx.font = "12px sans-serif";
+        ctx.fillText("#XTCODES", canvas.width - 110, canvas.height - 13);
       }
     }
 
@@ -225,8 +228,7 @@
           userImage = img;
           scale = 1;
           position = { x: 0, y: 0 };
-          document.getElementById('btnUploadImage').style.display = 'none';
-          document.getElementById('btnUploadTwibbon').style.display = 'inline-block';
+          twibbonButton.style.display = 'inline-block';
           draw();
         };
         img.src = event.target.result;
@@ -272,18 +274,16 @@
         return;
       }
       overlay.style.display = 'flex';
-      watermark.style.display = 'block';
-      draw();
+      draw(true);
       setTimeout(() => {
         const link = document.createElement('a');
         link.download = 'twibbon.png';
         link.href = canvas.toDataURL();
         link.click();
-        const altLink = document.getElementById('altDownloadLink');
-        altLink.href = canvas.toDataURL();
+        document.getElementById('altDownloadLink').href = canvas.toDataURL();
         document.getElementById('altDownloadText').style.display = 'block';
         overlay.style.display = 'none';
-        watermark.style.display = 'none';
+        draw();
         showNotification("Unduhan selesai!");
       }, 15000);
     }
