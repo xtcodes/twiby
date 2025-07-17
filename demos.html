@@ -31,82 +31,76 @@
       font-size: 1rem;
       cursor: pointer;
     }
-    .overlay {
+    #overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(200, 200, 200, 0.9);
-      display: flex;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(200, 200, 200, 0.8);
+      display: none;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      font-size: 1.2rem;
-      color: #333;
       z-index: 10;
-      pointer-events: none;
     }
-    .spinner {
-      border: 4px solid #ccc;
-      border-top: 4px solid #333;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
+    #overlay span {
+      background: white;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-weight: bold;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .notification {
+    #notification {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: #4caf50;
+      background-color: #4caf50;
       color: white;
-      padding: 0.7rem 1rem;
+      padding: 10px 20px;
       border-radius: 5px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      font-size: 1rem;
       display: none;
-      z-index: 20;
+      z-index: 1000;
+    }
+    #watermark {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      backdrop-filter: blur(3px);
+      display: none;
     }
   </style>
 </head>
 <body>
   <h1>Aplikasi Twibbon Interaktif</h1>
-  <div class="canvas-container">
+  <div class="canvas-container" id="canvasWrapper">
     <canvas id="twibbonCanvas" width="500" height="500"></canvas>
-    <div class="overlay" id="overlay" style="display: none;">
-      <div>Sedang proses...</div>
-      <div class="spinner"></div>
-    </div>
+    <div id="overlay"><span>Sedang proses...</span></div>
+    <div id="watermark">TwibbonApp</div>
   </div>
   <br />
   <input type="file" id="uploadImage" accept="image/*" />
+  <input type="file" id="uploadTwibbon" accept="image/png" style="display: none" />
   <br />
   <button onclick="downloadImage()">Unduh Hasil</button>
   <p id="altDownloadText" style="display:none; margin-top: 1rem;">
     Jika unduhan tidak dimulai otomatis,
     <a id="altDownloadLink" href="#" download="twibbon.png">klik di sini</a>.
   </p>
-  <div class="notification" id="notification"></div>
-  <audio id="notifSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
+  <div id="notification"></div>
   <script>
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('overlay');
+    const watermark = document.getElementById('watermark');
     const notification = document.getElementById('notification');
-    const sound = document.getElementById('notifSound');
+    const uploadImageInput = document.getElementById('uploadImage');
+    const uploadTwibbonInput = document.getElementById('uploadTwibbon');
 
-    const twibbon = new Image();
-    twibbon.src = 'twibbon.png';
-
+    let twibbon = null;
     let userImage = null;
+
     let scale = 1;
     let position = { x: 0, y: 0 };
     let isDragging = false;
@@ -118,6 +112,15 @@
     let zoomStartCenter = { x: 0, y: 0 };
     let lastPan = { x: 0, y: 0 };
 
+    function showNotification(text, type = "success") {
+      notification.textContent = text;
+      notification.style.display = 'block';
+      notification.style.backgroundColor = type === "error" ? "#f44336" : "#4caf50";
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 3000);
+    }
+
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (userImage) {
@@ -125,9 +128,11 @@
         const dh = userImage.height * scale;
         ctx.drawImage(userImage, position.x, position.y, dw, dh);
       }
-      ctx.globalAlpha = (isInteracting && userImage) ? 0.5 : 1;
-      ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
-      ctx.globalAlpha = 1;
+      if (twibbon) {
+        ctx.globalAlpha = (isInteracting && userImage) ? 0.5 : 1;
+        ctx.drawImage(twibbon, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+      }
     }
 
     function getDistance(p1, p2) {
@@ -161,7 +166,6 @@
     canvas.addEventListener('pointermove', e => {
       if (!pointers.has(e.pointerId)) return;
       pointers.set(e.pointerId, e);
-
       if (pointers.size === 1 && isDragging) {
         const dx = e.clientX - lastPan.x;
         const dy = e.clientY - lastPan.y;
@@ -173,7 +177,22 @@
         const [p1, p2] = Array.from(pointers.values());
         const currentDist = getDistance(p1, p2);
         const newScale = zoomStartScale * (currentDist / zoomStartDist);
+        const newCenter = getCenter(p1, p2);
+        const deltaCenter = {
+          x: newCenter.x - zoomStartCenter.x,
+          y: newCenter.y - zoomStartCenter.y
+        };
+        const oldImageSize = {
+          w: userImage.width * scale,
+          h: userImage.height * scale
+        };
         scale = Math.max(0.1, Math.min(5, newScale));
+        const newImageSize = {
+          w: userImage.width * scale,
+          h: userImage.height * scale
+        };
+        position.x += deltaCenter.x + (oldImageSize.w - newImageSize.w) / 2;
+        position.y += deltaCenter.y + (oldImageSize.h - newImageSize.h) / 2;
         draw();
       }
     });
@@ -196,10 +215,9 @@
       draw();
     });
 
-    document.getElementById('uploadImage').addEventListener('change', function (e) {
+    uploadImageInput.addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function (event) {
         const img = new Image();
@@ -207,6 +225,8 @@
           userImage = img;
           scale = 1;
           position = { x: 0, y: 0 };
+          uploadImageInput.style.display = 'none';
+          uploadTwibbonInput.style.display = 'block';
           draw();
         };
         img.src = event.target.result;
@@ -214,41 +234,57 @@
       reader.readAsDataURL(file);
     });
 
-    twibbon.onload = draw;
-
-    function showNotification(text, type = 'success') {
-      notification.textContent = text;
-      notification.style.display = 'block';
-      notification.style.backgroundColor = type === 'error' ? '#f44336' : '#4caf50';
-      if (sound) sound.play().catch(() => {});
-      if (navigator.vibrate) navigator.vibrate(100);
-      setTimeout(() => {
-        notification.style.display = 'none';
-      }, 3000);
-    }
+    uploadTwibbonInput.addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = img.width;
+          tempCanvas.height = img.height;
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.drawImage(img, 0, 0);
+          const imageData = tempCtx.getImageData(0, 0, img.width, img.height).data;
+          let hasTransparency = false;
+          for (let i = 3; i < imageData.length; i += 4) {
+            if (imageData[i] < 255) {
+              hasTransparency = true;
+              break;
+            }
+          }
+          if (!hasTransparency) {
+            showNotification("Twibbon harus memiliki ruang transparan.", "error");
+            return;
+          }
+          twibbon = img;
+          draw();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
 
     function downloadImage() {
       if (!userImage) {
-        showNotification('Silakan unggah gambar terlebih dahulu.', 'error');
+        showNotification("Silakan unggah gambar terlebih dahulu.", "error");
         return;
       }
-
       overlay.style.display = 'flex';
-
+      watermark.style.display = 'block';
+      draw();
       setTimeout(() => {
-        draw();
-
         const link = document.createElement('a');
         link.download = 'twibbon.png';
         link.href = canvas.toDataURL();
         link.click();
-
         const altLink = document.getElementById('altDownloadLink');
         altLink.href = canvas.toDataURL();
         document.getElementById('altDownloadText').style.display = 'block';
-
         overlay.style.display = 'none';
-        showNotification('Unduhan selesai!');
+        watermark.style.display = 'none';
+        showNotification("Unduhan selesai!");
       }, 15000);
     }
   </script>
