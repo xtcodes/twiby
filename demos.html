@@ -69,6 +69,7 @@
       border-radius: 4px;
       backdrop-filter: blur(3px);
       display: none;
+      z-index: 20;
     }
   </style>
 </head>
@@ -81,7 +82,7 @@
   </div>
   <br />
   <input type="file" id="uploadImage" accept="image/*" />
-  <input type="file" id="uploadTwibbon" accept="image/png" style="display: none;" />
+  <input type="file" id="uploadTwibbon" accept="image/png" style="display: none" />
   <br />
   <button onclick="downloadImage()">Unduh Hasil</button>
   <p id="altDownloadText" style="display:none; margin-top: 1rem;">
@@ -89,7 +90,6 @@
     <a id="altDownloadLink" href="#" download="twibbon.png">klik di sini</a>.
   </p>
   <div id="notification"></div>
-
   <script>
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
@@ -100,7 +100,7 @@
     const uploadTwibbonInput = document.getElementById('uploadTwibbon');
 
     let twibbon = new Image();
-    twibbon.src = 'twibbon.png'; // default
+    twibbon.src = 'twibbon.png'; // Gambar twibbon default
     twibbon.onload = draw;
 
     let userImage = null;
