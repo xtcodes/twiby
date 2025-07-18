@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alat Twibbon</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      max-width: 100%;
+      margin-top: 20px;
+    }
+    .btn {
+      padding: 10px 16px;
+      margin: 10px 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #unduhBtn, #unggahTwibbonBtn, #twibbonDefaultBtn {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Alat Twibbon Sederhana</h2>
+
+  <input type="file" id="unggahGambarInput" accept="image/*" class="btn" />
+  <input type="file" id="unggahTwibbonInput" accept="image/*" style="display:none" />
+
+  <button id="unggahTwibbonBtn" class="btn">Unggah Twibbon</button>
+  <button id="twibbonDefaultBtn" class="btn">Gunakan Twibbon Default</button>
+  <button id="unduhBtn" class="btn">Unduh Hasil</button>
+
+  <br/>
+  <canvas id="kanvas" width="500" height="500"></canvas>
+
+  <script>
+    const unggahGambarInput = document.getElementById('unggahGambarInput');
+    const unggahTwibbonInput = document.getElementById('unggahTwibbonInput');
+    const unggahTwibbonBtn = document.getElementById('unggahTwibbonBtn');
+    const twibbonDefaultBtn = document.getElementById('twibbonDefaultBtn');
+    const unduhBtn = document.getElementById('unduhBtn');
+    const kanvas = document.getElementById('kanvas');
+    const ctx = kanvas.getContext('2d');
+
+    let gambarPengguna = null;
+    let twibbon = null;
+    const twibbonDefaultSrc = 'twibbon.png'; // Ganti link sesuai twibbon default kamu
+
+    function resetCanvas() {
+      ctx.clearRect(0, 0, kanvas.width, kanvas.height);
+    }
+
+    function tampilkanGambarDanTwibbon() {
+      if (!gambarPengguna || !twibbon) return;
+
+      resetCanvas();
+      ctx.drawImage(gambarPengguna, 0, 0, kanvas.width, kanvas.height);
+      ctx.drawImage(twibbon, 0, 0, kanvas.width, kanvas.height);
+    }
+
+    unggahGambarInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        gambarPengguna = new Image();
+        gambarPengguna.onload = () => {
+          unggahGambarInput.style.display = 'none';
+          unggahTwibbonBtn.style.display = 'inline-block';
+          twibbonDefaultBtn.style.display = 'inline-block';
+          resetCanvas();
+          ctx.drawImage(gambarPengguna, 0, 0, kanvas.width, kanvas.height);
+        };
+        gambarPengguna.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    unggahTwibbonBtn.addEventListener('click', () => {
+      unggahTwibbonInput.click();
+    });
+
+    unggahTwibbonInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        twibbon = new Image();
+        twibbon.onload = () => {
+          tampilkanGambarDanTwibbon();
+          unduhBtn.style.display = 'inline-block';
+          twibbonDefaultBtn.style.display = 'none';
+        };
+        twibbon.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    twibbonDefaultBtn.addEventListener('click', () => {
+      twibbon = new Image();
+      twibbon.crossOrigin = 'anonymous';
+      twibbon.onload = () => {
+        tampilkanGambarDanTwibbon();
+        unduhBtn.style.display = 'inline-block';
+        twibbonDefaultBtn.style.display = 'none';
+      };
+      twibbon.src = twibbonDefaultSrc;
+    });
+
+    unduhBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'twibbon.png';
+      link.href = kanvas.toDataURL();
+      link.click();
+    });
+  </script>
+
+</body>
+</html>
