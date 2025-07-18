@@ -152,25 +152,35 @@
     });
 
     bagikanBtn.addEventListener('click', async () => {
-      if (!navigator.canShare || !navigator.canShare({ files: [] })) {
-        alert('Web Share API tidak didukung di perangkat ini.');
-        return;
-      }
+    try {
+      // Konversi canvas ke blob
+      const blob = await (await fetch(hasilDataURL)).blob();
+      const file = new File([blob], 'twibbon.png', { type: blob.type });
 
-      try {
-        const blob = await (await fetch(hasilDataURL)).blob();
-        const file = new File([blob], 'twibbon.png', { type: blob.type });
-
+      // Periksa apakah Web Share API mendukung berbagi file
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: 'Twibbon Saya',
           text: 'Lihat hasil twibbon saya!',
           files: [file]
         });
-      } catch (err) {
-        alert('Gagal membagikan: ' + err.message);
+      } else if (navigator.share) {
+        // Jika tidak bisa share file, coba tanpa file
+        await navigator.share({
+          title: 'Twibbon Saya',
+          text: 'Lihat hasil twibbon saya!',
+          url: window.location.href
+        });
+      } else {
+        alert('Web Share API tidak didukung di perangkat ini.');
       }
-    });
+    } catch (err) {
+      console.error('Gagal membagikan:', err);
+      alert('Terjadi kesalahan saat mencoba membagikan.');
+    }
+  });
 
+    
     // Tampilkan placeholder saat awal
     tampilkanPlaceholder();
   </script>
