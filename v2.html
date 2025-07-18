@@ -21,7 +21,11 @@
       font-size: 16px;
       cursor: pointer;
     }
-    #unduhBtn, #unggahTwibbonBtn, #twibbonDefaultBtn {
+    #unggahGambarInput,
+    #unggahTwibbonInput,
+    #unggahTwibbonBtn,
+    #twibbonDefaultBtn,
+    #unduhBtn {
       display: none;
     }
   </style>
@@ -30,17 +34,23 @@
 
   <h2>Alat Twibbon Sederhana</h2>
 
-  <input type="file" id="unggahGambarInput" accept="image/*" class="btn" />
-  <input type="file" id="unggahTwibbonInput" accept="image/*" style="display:none" />
+  <!-- Tombol pemicu unggah gambar -->
+  <button id="unggahGambarBtn" class="btn">Unggah Gambar</button>
+  <input type="file" id="unggahGambarInput" accept="image/*" style="display:none" />
 
+  <!-- Tombol dan input twibbon -->
+  <input type="file" id="unggahTwibbonInput" accept="image/*" />
   <button id="unggahTwibbonBtn" class="btn">Unggah Twibbon</button>
   <button id="twibbonDefaultBtn" class="btn">Gunakan Twibbon Default</button>
+
+  <!-- Tombol unduh -->
   <button id="unduhBtn" class="btn">Unduh Hasil</button>
 
   <br/>
   <canvas id="kanvas" width="500" height="500"></canvas>
 
   <script>
+    const unggahGambarBtn = document.getElementById('unggahGambarBtn');
     const unggahGambarInput = document.getElementById('unggahGambarInput');
     const unggahTwibbonInput = document.getElementById('unggahTwibbonInput');
     const unggahTwibbonBtn = document.getElementById('unggahTwibbonBtn');
@@ -51,7 +61,7 @@
 
     let gambarPengguna = null;
     let twibbon = null;
-    const twibbonDefaultSrc = 'twibbon.png'; // Ganti link sesuai twibbon default kamu
+    const twibbonDefaultSrc = 'twibbon.png'; // Ganti dengan link twibbon default kamu
 
     function resetCanvas() {
       ctx.clearRect(0, 0, kanvas.width, kanvas.height);
@@ -65,6 +75,10 @@
       ctx.drawImage(twibbon, 0, 0, kanvas.width, kanvas.height);
     }
 
+    unggahGambarBtn.addEventListener('click', () => {
+      unggahGambarInput.click();
+    });
+
     unggahGambarInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -72,7 +86,7 @@
       reader.onload = function(event) {
         gambarPengguna = new Image();
         gambarPengguna.onload = () => {
-          unggahGambarInput.style.display = 'none';
+          unggahGambarBtn.style.display = 'none';
           unggahTwibbonBtn.style.display = 'inline-block';
           twibbonDefaultBtn.style.display = 'inline-block';
           resetCanvas();
