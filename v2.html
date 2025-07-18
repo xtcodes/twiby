@@ -5,45 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Twibbon Geser & Zoom</title>
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    canvas {
-      border: 1px solid #ccc;
-      max-width: 100%;
-      background-color: #f5f5f5;
-      touch-action: none;
-      margin-top: 20px;
-    }
-    .btn {
-      padding: 10px 16px;
-      margin: 10px 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    input[type="file"],
-    #unggahTwibbonBtn,
-    #twibbonDefaultBtn,
-    #unduhBtn,
-    #bagikanBtn {
-      display: none;
-    }
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    canvas { border: 1px solid #ccc; max-width: 100%; background-color: #f5f5f5; touch-action: none; margin-top: 20px; }
+    .btn { padding: 10px 16px; margin: 10px 5px; font-size: 16px; cursor: pointer; }
+    input[type="file"], #unggahTwibbonBtn, #twibbonDefaultBtn, #unduhBtn, #bagikanBtn { display: none; }
   </style>
 </head>
 <body>
 
   <h2>Alat Twibbon Geser & Zoom</h2>
 
-  <!-- Tombol awal -->
   <button id="unggahGambarBtn" class="btn">Unggah Gambar</button>
   <input type="file" id="unggahGambarInput" accept="image/*">
   <input type="file" id="unggahTwibbonInput" accept="image/*">
   <button id="unggahTwibbonBtn" class="btn">Unggah Twibbon</button>
   <button id="twibbonDefaultBtn" class="btn">Twibbon Default</button>
-
-  <!-- Tombol hasil -->
   <button id="unduhBtn" class="btn">Unduh Hasil</button>
   <button id="bagikanBtn" class="btn">Bagikan</button>
 
@@ -87,10 +63,25 @@
       if (!gambarPengguna || !twibbon) return;
       resetCanvas();
 
+      const imgRatio = gambarPengguna.width / gambarPengguna.height;
+      const canvasRatio = kanvas.width / kanvas.height;
+
+      let drawWidth, drawHeight;
+      if (imgRatio > canvasRatio) {
+        drawWidth = kanvas.width;
+        drawHeight = drawWidth / imgRatio;
+      } else {
+        drawHeight = kanvas.height;
+        drawWidth = drawHeight * imgRatio;
+      }
+
+      const centerX = (kanvas.width - drawWidth) / 2;
+      const centerY = (kanvas.height - drawHeight) / 2;
+
       ctx.save();
       ctx.translate(offsetX, offsetY);
       ctx.scale(scale, scale);
-      ctx.drawImage(gambarPengguna, 0, 0, kanvas.width, kanvas.height);
+      ctx.drawImage(gambarPengguna, centerX, centerY, drawWidth, drawHeight);
       ctx.restore();
 
       ctx.save();
@@ -120,7 +111,7 @@
           unggahTwibbonBtn.style.display = 'inline-block';
           twibbonDefaultBtn.style.display = 'inline-block';
           resetCanvas();
-          ctx.drawImage(gambarPengguna, 0, 0, kanvas.width, kanvas.height);
+          tampilkanGambarDanTwibbon();
         };
         gambarPengguna.src = event.target.result;
       };
@@ -233,9 +224,7 @@
       tampilkanGambarDanTwibbon();
     });
 
-    // Tampilkan placeholder saat awal
     tampilkanPlaceholder();
   </script>
-
 </body>
 </html>
