@@ -15,6 +15,7 @@
       max-width: 100%;
       margin-top: 20px;
       background-color: #f5f5f5;
+      touch-action: none;
     }
     .btn {
       padding: 10px 16px;
@@ -34,11 +35,11 @@
 </head>
 <body>
 
-  <h2>Alat Twibbon Sederhana</h2>
+  <h2>Alat Twibbon Geser & Zoom</h2>
 
-  <!-- Tombol unggah -->
+  <!-- Tombol upload -->
   <button id="unggahGambarBtn" class="btn">Unggah Gambar</button>
-  <input type="file" id="unggahGambarInput" accept="image/*" style="display:none" />
+  <input type="file" id="unggahGambarInput" accept="image/*" />
   <input type="file" id="unggahTwibbonInput" accept="image/*" />
   <button id="unggahTwibbonBtn" class="btn">Unggah Twibbon</button>
   <button id="twibbonDefaultBtn" class="btn">Gunakan Twibbon Default</button>
@@ -64,7 +65,12 @@
     let gambarPengguna = null;
     let twibbon = null;
     let hasilDataURL = null;
-    const twibbonDefaultSrc = 'twibbon.png'; // ganti dengan milikmu
+    const twibbonDefaultSrc = 'twibbon.png';
+
+    let offsetX = 0, offsetY = 0;
+    let scale = 1;
+    let lastTouchDistance = null;
+    let lastTouchPos = null;
 
     function tampilkanPlaceholder() {
       ctx.clearRect(0, 0, kanvas.width, kanvas.height);
@@ -80,10 +86,21 @@
 
     function tampilkanGambarDanTwibbon() {
       if (!gambarPengguna || !twibbon) return;
-
       resetCanvas();
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
       ctx.drawImage(gambarPengguna, 0, 0, kanvas.width, kanvas.height);
+      ctx.restore();
+
       ctx.drawImage(twibbon, 0, 0, kanvas.width, kanvas.height);
+    }
+
+    function getDistance(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
     }
 
     unggahGambarBtn.addEventListener('click', () => {
@@ -146,42 +163,71 @@
       link.href = hasilDataURL;
       link.click();
 
-      // Sembunyikan tombol unduh, tampilkan tombol bagikan
       unduhBtn.style.display = 'none';
       bagikanBtn.style.display = 'inline-block';
     });
 
     bagikanBtn.addEventListener('click', async () => {
-    try {
-      // Konversi canvas ke blob
-      const blob = await (await fetch(hasilDataURL)).blob();
-      const file = new File([blob], 'twibbon.png', { type: blob.type });
+      try {
+        const blob = await (await fetch(hasilDataURL)).blob();
+        const file = new File([blob], 'twibbon.png', { type: blob.type });
 
-      // Periksa apakah Web Share API mendukung berbagi file
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: 'Twibbon Saya',
-          text: 'Lihat hasil twibbon saya!',
-          files: [file]
-        });
-      } else if (navigator.share) {
-        // Jika tidak bisa share file, coba tanpa file
-        await navigator.share({
-          title: 'Twibbon Saya',
-          text: 'Lihat hasil twibbon saya!',
-          url: window.location.href
-        });
-      } else {
-        alert('Web Share API tidak didukung di perangkat ini.');
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Twibbon Saya',
+            text: 'Lihat hasil twibbon saya!',
+            files: [file]
+          });
+        } else if (navigator.share) {
+          await navigator.share({
+            title: 'Twibbon Saya',
+            text: 'Lihat hasil twibbon saya!',
+            url: window.location.href
+          });
+        } else {
+          alert('Web Share API tidak didukung di perangkat ini.');
+        }
+      } catch (err) {
+        console.error('Gagal membagikan:', err);
+        alert('Terjadi kesalahan saat membagikan.');
       }
-    } catch (err) {
-      console.error('Gagal membagikan:', err);
-      alert('Terjadi kesalahan saat mencoba membagikan.');
-    }
-  });
+    });
 
-    
-    // Tampilkan placeholder saat awal
+    // Interaksi sentuhan
+    kanvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        lastTouchPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        lastTouchDistance = getDistance(e.touches);
+      }
+    });
+
+    kanvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && lastTouchPos) {
+        const dx = e.touches[0].clientX - lastTouchPos.x;
+        const dy = e.touches[0].clientY - lastTouchPos.y;
+        offsetX += dx;
+        offsetY += dy;
+        lastTouchPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        tampilkanGambarDanTwibbon();
+      } else if (e.touches.length === 2) {
+        const newDistance = getDistance(e.touches);
+        if (lastTouchDistance) {
+          const delta = newDistance / lastTouchDistance;
+          scale *= delta;
+          lastTouchDistance = newDistance;
+          tampilkanGambarDanTwibbon();
+        }
+      }
+    });
+
+    kanvas.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) lastTouchDistance = null;
+      if (e.touches.length < 1) lastTouchPos = null;
+    });
+
+    // Tampilkan placeholder awal
     tampilkanPlaceholder();
   </script>
 
