@@ -9,7 +9,7 @@
       margin: 0;
       padding: 2rem;
       font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-      text-align: center;
+    /*  text-align: center; */
       background: #f4f4f4;
     }
     main {
@@ -114,13 +114,14 @@
     </div>
   </div>
 
-  <br />
+  <p>
   <input type="file" id="uploadImage" accept="image/*" />
   <input type="file" id="uploadTwibbon" accept="image/png" />
 
   <button class="upload" id="selectImageButton">Pilih Foto</button>
   <button class="upload" id="selectTwibbonButton" style="display: none;">Pilih Twibbon</button>
   <button class="download" onclick="downloadImage()">Unduh Hasil</button>
+  </p>
 
   <p id="altDownloadText" style="display:none; margin-top: 1rem;">
     Jika unduhan tidak dimulai otomatis,
