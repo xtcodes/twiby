@@ -26,7 +26,8 @@
     #unggahTwibbonInput,
     #unggahTwibbonBtn,
     #twibbonDefaultBtn,
-    #unduhBtn {
+    #unduhBtn,
+    #bagikanBtn {
       display: none;
     }
   </style>
@@ -35,17 +36,16 @@
 
   <h2>Alat Twibbon Sederhana</h2>
 
-  <!-- Tombol pemicu unggah gambar -->
+  <!-- Tombol unggah -->
   <button id="unggahGambarBtn" class="btn">Unggah Gambar</button>
   <input type="file" id="unggahGambarInput" accept="image/*" style="display:none" />
-
-  <!-- Tombol dan input twibbon -->
   <input type="file" id="unggahTwibbonInput" accept="image/*" />
   <button id="unggahTwibbonBtn" class="btn">Unggah Twibbon</button>
   <button id="twibbonDefaultBtn" class="btn">Gunakan Twibbon Default</button>
 
-  <!-- Tombol unduh -->
+  <!-- Tombol hasil -->
   <button id="unduhBtn" class="btn">Unduh Hasil</button>
+  <button id="bagikanBtn" class="btn">Bagikan</button>
 
   <br/>
   <canvas id="kanvas" width="500" height="500"></canvas>
@@ -57,12 +57,14 @@
     const unggahTwibbonBtn = document.getElementById('unggahTwibbonBtn');
     const twibbonDefaultBtn = document.getElementById('twibbonDefaultBtn');
     const unduhBtn = document.getElementById('unduhBtn');
+    const bagikanBtn = document.getElementById('bagikanBtn');
     const kanvas = document.getElementById('kanvas');
     const ctx = kanvas.getContext('2d');
 
     let gambarPengguna = null;
     let twibbon = null;
-    const twibbonDefaultSrc = 'twibbon.png'; // Ganti dengan link twibbon default kamu
+    let hasilDataURL = null;
+    const twibbonDefaultSrc = 'twibbon.png'; // ganti dengan milikmu
 
     function tampilkanPlaceholder() {
       ctx.clearRect(0, 0, kanvas.width, kanvas.height);
@@ -138,13 +140,38 @@
     });
 
     unduhBtn.addEventListener('click', () => {
+      hasilDataURL = kanvas.toDataURL();
       const link = document.createElement('a');
       link.download = 'twibbon.png';
-      link.href = kanvas.toDataURL();
+      link.href = hasilDataURL;
       link.click();
+
+      // Sembunyikan tombol unduh, tampilkan tombol bagikan
+      unduhBtn.style.display = 'none';
+      bagikanBtn.style.display = 'inline-block';
     });
 
-    // Tampilkan placeholder saat pertama kali
+    bagikanBtn.addEventListener('click', async () => {
+      if (!navigator.canShare || !navigator.canShare({ files: [] })) {
+        alert('Web Share API tidak didukung di perangkat ini.');
+        return;
+      }
+
+      try {
+        const blob = await (await fetch(hasilDataURL)).blob();
+        const file = new File([blob], 'twibbon.png', { type: blob.type });
+
+        await navigator.share({
+          title: 'Twibbon Saya',
+          text: 'Lihat hasil twibbon saya!',
+          files: [file]
+        });
+      } catch (err) {
+        alert('Gagal membagikan: ' + err.message);
+      }
+    });
+
+    // Tampilkan placeholder saat awal
     tampilkanPlaceholder();
   </script>
 
