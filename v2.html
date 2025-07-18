@@ -10,8 +10,8 @@
       position: absolute;
       bottom: 10px;
       right: 10px;
-      width: 30px;
-      height: 30px;
+      width: 36px;
+      height: 36px;
       border: 4px solid #ccc;
       border-top: 4px solid #333;
       border-radius: 50%;
@@ -23,8 +23,7 @@
       100% { transform: rotate(360deg); }
     }
 
-    #kanvas::before {
-      content: "Unggah gambar untuk mulai";
+    #placeholderText {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -36,6 +35,7 @@
     }
     canvas {
       width: 100%;
+      touch-action: none;
     }
 
     #canvasWrapper {
@@ -46,11 +46,7 @@
 </head>
 <body>
   <h2>Twibbon App</h2>
-  <div id="canvasWrapper">
-    <canvas id="kanvas" width="500" height="500" style="border:1px solid #000"></canvas>
-    <div id="spinner"></div>
-  </div>
-<p>
+
   <button id="unggahGambarBtn">Unggah Gambar</button>
   <button id="unggahTwibbonBtn" style="display:none">Unggah Twibbon</button>
   <button id="twibbonDefaultBtn" style="display:none">Gunakan Twibbon Default</button>
@@ -59,7 +55,12 @@
 
   <input type="file" id="inputGambar" accept="image/*" hidden>
   <input type="file" id="inputTwibbon" accept="image/*" hidden>
-</p>
+
+  <div id="canvasWrapper">
+    <canvas id="kanvas" width="500" height="500" style="border:1px solid #000"></canvas>
+    <div id="placeholderText">Unggah gambar untuk mulai</div>
+    <div id="spinner"></div>
+  </div>
 
   <script>
     const unggahGambarBtn = document.getElementById('unggahGambarBtn');
@@ -72,6 +73,7 @@
     const kanvas = document.getElementById('kanvas');
     const ctx = kanvas.getContext('2d');
     const spinner = document.getElementById('spinner');
+    const placeholderText = document.getElementById('placeholderText');
 
     let gambarPengguna = null;
     let twibbon = null;
@@ -94,6 +96,7 @@
           unggahGambarBtn.style.display = 'none';
           unggahTwibbonBtn.style.display = 'inline-block';
           twibbonDefaultBtn.style.display = 'inline-block';
+          placeholderText.style.display = 'none';
         };
         gambarPengguna.src = reader.result;
       };
@@ -209,7 +212,6 @@
       tampilkanGambarDanTwibbon();
       hasilDataURL = kanvas.toDataURL();
 
-      // Overlay proses
       spinner.style.display = 'block';
       ctx.save();
       ctx.fillStyle = 'rgba(200,200,200,0.8)';
