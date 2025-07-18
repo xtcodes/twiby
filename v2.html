@@ -60,7 +60,7 @@
     }
 
     function tampilkanGambarDanTwibbon() {
-      if (!gambarPengguna || !twibbon) return;
+      if (!gambarPengguna) return;
       resetCanvas();
 
       const imgRatio = gambarPengguna.width / gambarPengguna.height;
@@ -84,10 +84,12 @@
       ctx.drawImage(gambarPengguna, centerX, centerY, drawWidth, drawHeight);
       ctx.restore();
 
-      ctx.save();
-      ctx.globalAlpha = interaksiAktif ? 0.5 : 1.0;
-      ctx.drawImage(twibbon, 0, 0, kanvas.width, kanvas.height);
-      ctx.restore();
+      if (twibbon) {
+        ctx.save();
+        ctx.globalAlpha = interaksiAktif ? 0.5 : 1.0;
+        ctx.drawImage(twibbon, 0, 0, kanvas.width, kanvas.height);
+        ctx.restore();
+      }
     }
 
     function getDistance(touches) {
@@ -110,7 +112,6 @@
           unggahGambarBtn.style.display = 'none';
           unggahTwibbonBtn.style.display = 'inline-block';
           twibbonDefaultBtn.style.display = 'inline-block';
-          resetCanvas();
           tampilkanGambarDanTwibbon();
         };
         gambarPengguna.src = event.target.result;
