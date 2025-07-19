@@ -5,14 +5,37 @@
   <title>Twibbon Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: sans-serif; text-align: center; margin: 20px; }
-    canvas { width: 100%; touch-action: none; }
-    #canvasWrapper { position: relative; display: inline-block; }
+        body {
+        background-color: #f0f0f2;
+        margin: 0;
+        padding: 2em;
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;  
+        }
+    main {
+      width: 600px;
+      margin: 5em auto;
+      padding: 2em;
+      background-color: #fdfdff;
+      border-radius: 0.5em;
+      box-shadow: 2px 3px 7px 2px rgba(0,0,0,0.02);
+    }
+    a:link, a:visited {
+      color: #38488f;
+      text-decoration: none;
+    }
+    canvas { 
+      width: 100%; 
+      touch-action: none; 
+    }
+    #canvasWrapper { 
+      position: relative; 
+      display: inline-block; 
+    }
     #spinner {
       display: none;
       position: absolute;
-      bottom: 10px;
-      right: 10px;
+      bottom: 20px;
+      right: 20px;
       width: 24px;
       height: 24px;
       border: 4px solid #ccc;
@@ -32,32 +55,42 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+    button { 
+      margin: 10px; 
+      padding: 10px 20px; 
+      font-size: 16px; 
+    }
+    @media (max-width: 700px) {
+     main {
+      margin: 0 auto;
+      width: auto;
+     }
+    }
   </style>
 </head>
 <body>
-
+<main>
 <h2>Twibbon Generator</h2>
-<p>
-  <button id="unggahGambarBtn">Unggah Gambar</button>
-  <input type="file" id="inputGambar" accept="image/*" style="display:none">
-  <button id="unggahTwibbonBtn" style="display:none">Unggah Twibbon</button>
-  <input type="file" id="inputTwibbon" accept="image/png" style="display:none">
-  <button id="twibbonDefaultBtn" style="display:none">Gunakan Twibbon Default</button>
-</p>
 
 <div id="canvasWrapper">
   <canvas id="kanvas" width="500" height="500" style="border:1px solid #000"></canvas>
   <div id="placeholderText">Unggah gambar untuk mulai</div>
   <div id="spinner"></div>
 </div>
-<canvas id="canvasTemp" width="500" height="500" style="display:none"></canvas>
+  
+<p><canvas id="canvasTemp" width="500" height="500" style="display:none"></canvas></p>
 
 <p>
+  <button id="unggahGambarBtn">Unggah Gambar</button>
+  <input type="file" id="inputGambar" accept="image/*" style="display:none">
+  <button id="unggahTwibbonBtn" style="display:none">Unggah Twibbon</button>
+  <input type="file" id="inputTwibbon" accept="image/png" style="display:none">
+  <button id="twibbonDefaultBtn" style="display:none">Gunakan Twibbon Default</button>
   <button id="unduhBtn" style="display:none">Unduh Hasil</button>
   <button id="bagikanBtn" style="display:none">Bagikan</button>
 </p>
-
+</main>
+  
 <script>
 const kanvas = document.getElementById('kanvas');
 const ctx = kanvas.getContext('2d');
