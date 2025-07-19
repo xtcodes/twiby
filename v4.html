@@ -51,9 +51,14 @@
       color: #888;
       font-size: 14px;
       pointer-events: none;
+      white-space: nowrap;
     }
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      0% { 
+        transform: rotate(0deg); 
+      }
+      to { 
+        transform: rotate(360deg); 
     }
     button {
       border: none;
