@@ -286,7 +286,7 @@ bagikanBtn.onclick = async () => {
   const file = new File([blob], 'twibbon.png', { type: 'image/png' });
   if (navigator.share) {
     try {
-      await navigator.share({ files: [file], title: 'Twibbon Saya' });
+      await navigator.share({ files: [file], url: 'https://xtcodes.github.io/twiby/v4', title: 'Twibbon Saya' });
     } catch (err) {
       alert('Gagal membagikan: ' + err);
     }
