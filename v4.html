@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Twibbon App Final</title>
+  <style>
+    #spinner {
+      display: none;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 36px;
+      height: 36px;
+      border: 4px solid #ccc;
+      border-top: 4px solid #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #placeholderText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #888;
+      font-size: 18px;
+      pointer-events: none;
+      white-space: nowrap;
+    } 
+    canvas { 
+      width: 100%;
+      touch-action: none;
+    }
+    #canvasWrapper {
+      position: relative;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h2>Twibbon App</h2>
+<div id="canvasWrapper">
+    <canvas id="kanvas" width="500" height="500" style="border:1px solid #000"></canvas>
+    <div id="placeholderText">Unggah gambar untuk mulai</div>
+    <div id="spinner"></div>
+  </div>
+
+<p>
+  <button id="unggahGambarBtn">Unggah Gambar</button>
+  <button id="unggahTwibbonBtn" style="display:none">Unggah Twibbon</button>
+  <button id="twibbonDefaultBtn" style="display:none">Gunakan Twibbon Default</button>
+  <button id="unduhBtn" style="display:none">Unduh Hasil</button>
+  <button id="bagikanBtn" style="display:none">Bagikan</button>
+
+  <input type="file" id="inputGambar" accept="image/*" hidden>
+  <input type="file" id="inputTwibbon" accept="image/png" hidden>
+</p>
+
+  <script>
+    const unggahGambarBtn = document.getElementById('unggahGambarBtn');
+    const unggahTwibbonBtn = document.getElementById('unggahTwibbonBtn');
+    const twibbonDefaultBtn = document.getElementById('twibbonDefaultBtn');
+    const unduhBtn = document.getElementById('unduhBtn');
+    const bagikanBtn = document.getElementById('bagikanBtn');
+    const inputGambar = document.getElementById('inputGambar');
+    const inputTwibbon = document.getElementById('inputTwibbon');
+    const kanvas = document.getElementById('kanvas');
+    const ctx = kanvas.getContext('2d');
+    const spinner = document.getElementById('spinner');
+    const placeholderText = document.getElementById('placeholderText');
+
+    let gambarPengguna = null;
+    let twibbon = null;
+    let hasilDataURL = '';
+    let offsetX = 0, offsetY = 0, scale = 1;
+    let lastTouches = [];
+    let interaksiAktif = false;
+
+    function cekTwibbonTransparan(image) {
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCanvas.width = image.width;
+      tempCanvas.height = image.height;
+      tempCtx.drawImage(image, 0, 0);
+      const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
+      for (let i = 3; i < imageData.length; i += 4) {
+        if (imageData[i] < 255) return true;
+      }
+      return false;
+    }
+
+    unggahGambarBtn.onclick = () => inputGambar.click();
+    unggahTwibbonBtn.onclick = () => inputTwibbon.click();
+
+    inputGambar.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        gambarPengguna = new Image();
+        gambarPengguna.onload = () => {
+          tampilkanGambarDanTwibbon();
+          unggahGambarBtn.style.display = 'none';
+          unggahTwibbonBtn.style.display = 'inline-block';
+          twibbonDefaultBtn.style.display = 'inline-block';
+          placeholderText.style.display = 'none';
+        };
+        gambarPengguna.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    inputTwibbon.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const tempImage = new Image();
+        tempImage.onload = () => {
+          if (!cekTwibbonTransparan(tempImage)) {
+            alert('Twibbon harus memiliki ruang transparan (PNG transparan).');
+            return;
+          }
+          twibbon = tempImage;
+          tampilkanGambarDanTwibbon();
+          unduhBtn.style.display = 'inline-block';
+          twibbonDefaultBtn.style.display = 'none';
+        };
+        tempImage.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    twibbonDefaultBtn.onclick = () => {
+      const defaultTwibbon = new Image();
+      defaultTwibbon.onload = () => {
+        if (!cekTwibbonTransparan(defaultTwibbon)) {
+          alert('Twibbon default tidak transparan.');
+          return;
+        }
+        twibbon = defaultTwibbon;
+        tampilkanGambarDanTwibbon();
+        unduhBtn.style.display = 'inline-block';
+        twibbonDefaultBtn.style.display = 'none';
+      };
+      defaultTwibbon.src = 'twibbon.png';
+    };
+
+    function resetCanvas() {
+      ctx.clearRect(0, 0, kanvas.width, kanvas.height);
+    }
+
+    function tampilkanGambarDanTwibbon(tampilkanWatermark = false) {
+      if (!gambarPengguna) return;
+      resetCanvas();
+
+      const imgRatio = gambarPengguna.width / gambarPengguna.height;
+      const canvasRatio = kanvas.width / kanvas.height;
+
+      let drawWidth, drawHeight;
+      if (imgRatio > canvasRatio) {
+        drawWidth = kanvas.width;
+        drawHeight = drawWidth / imgRatio;
+      } else {
+        drawHeight = kanvas.height;
+        drawWidth = drawHeight * imgRatio;
+      }
+
+      const centerX = (kanvas.width - drawWidth) / 2;
+      const centerY = (kanvas.height - drawHeight) / 2;
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+      ctx.drawImage(gambarPengguna, centerX, centerY, drawWidth, drawHeight);
+      ctx.restore();
+
+      if (twibbon) {
+        ctx.save();
+        ctx.globalAlpha = interaksiAktif ? 0.5 : 1.0;
+        ctx.drawImage(twibbon, 0, 0, kanvas.width, kanvas.height);
+        ctx.restore();
+      }
+
+      if (tampilkanWatermark) {
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.font = "14px sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText("#XTCODES", kanvas.width - 10, kanvas.height - 10);
+        ctx.restore();
+      }
+    }
+
+    let lastTouchDistance = 0;
+    let isDragging = false, lastX, lastY;
+
+    kanvas.addEventListener('touchstart', e => {
+      interaksiAktif = true;
+      if (e.touches.length === 1) {
+        isDragging = true;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDistance = Math.hypot(dx, dy);
+      }
+    });
+
+    kanvas.addEventListener('touchmove', e => {
+      if (e.touches.length === 1 && isDragging) {
+        const dx = e.touches[0].clientX - lastX;
+        const dy = e.touches[0].clientY - lastY;
+        offsetX += dx;
+        offsetY += dy;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+        tampilkanGambarDanTwibbon();
+      } else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distance = Math.hypot(dx, dy);
+        const zoom = distance / lastTouchDistance;
+        scale *= zoom;
+        lastTouchDistance = distance;
+        tampilkanGambarDanTwibbon();
+      }
+    });
+
+    kanvas.addEventListener('touchend', () => {
+      interaksiAktif = false;
+      isDragging = false;
+      tampilkanGambarDanTwibbon();
+    });
+
+    unduhBtn.addEventListener('click', () => {
+      tampilkanGambarDanTwibbon(true);
+      hasilDataURL = kanvas.toDataURL();
+
+      spinner.style.display = 'block';
+      ctx.save();
+      ctx.fillStyle = 'rgba(200,200,200,0.8)';
+      ctx.fillRect(0, 0, kanvas.width, kanvas.height);
+      ctx.fillStyle = '#333';
+      ctx.font = '20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Sedang proses...', kanvas.width / 2, kanvas.height / 2);
+      ctx.restore();
+
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.download = 'twibbon.png';
+        link.href = hasilDataURL;
+        link.click();
+
+        spinner.style.display = 'none';
+        unduhBtn.style.display = 'none';
+        bagikanBtn.style.display = 'inline-block';
+        tampilkanGambarDanTwibbon();
+      }, 15000);
+    });
+
+    bagikanBtn.addEventListener('click', async () => {
+      tampilkanGambarDanTwibbon(true);
+      hasilDataURL = kanvas.toDataURL();
+
+      try {
+        const blob = await (await fetch(hasilDataURL)).blob();
+        const file = new File([blob], 'twibbon.png', { type: blob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Twibbon Saya',
+            text: 'Lihat hasil twibbon saya!',
+            files: [file]
+          });
+        } else if (navigator.share) {
+          await navigator.share({
+            title: 'Twibbon Saya',
+            text: 'Lihat hasil twibbon saya!',
+            url: window.location.href
+          });
+        } else {
+          alert('Web Share API tidak didukung di perangkat ini.');
+        }
+      } catch (err) {
+        console.error('Gagal membagikan:', err);
+        alert('Terjadi kesalahan saat mencoba membagikan.');
+      } finally {
+        tampilkanGambarDanTwibbon();
+      }
+    });
+  </script>
+</body>
+</html>
