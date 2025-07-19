@@ -71,7 +71,18 @@
       text-decoration: none;
       display: inline-block;
       font-size: 16px; 
+      cursor: pointer;
     }
+    .share {
+      background-color: #008CBA;
+    } /* Blue */
+    .upload {
+      background-color: #555555;
+    } /* Black */
+    .default {
+      background-color: #e7e7e7; 
+      color: black;
+    } /* Gray */ 
     @media (max-width: 700px) {
      main {
       margin: 0 auto;
@@ -93,13 +104,13 @@
 <p><canvas id="canvasTemp" width="500" height="500" style="display:none"></canvas></p>
 
 <p>
-  <button id="unggahGambarBtn">Unggah Gambar</button>
+  <button class="upload" id="unggahGambarBtn">Unggah Gambar</button>
   <input type="file" id="inputGambar" accept="image/*" style="display:none">
-  <button id="unggahTwibbonBtn" style="display:none">Unggah Twibbon</button>
+  <button class="upload" id="unggahTwibbonBtn" style="display:none">Unggah Twibbon</button>
   <input type="file" id="inputTwibbon" accept="image/png" style="display:none">
-  <button id="twibbonDefaultBtn" style="display:none">Twibbon Default</button>
+  <button class="default" id="twibbonDefaultBtn" style="display:none">Twibbon Default</button>
   <button id="unduhBtn" style="display:none">Unduh Hasil</button>
-  <button id="bagikanBtn" style="display:none">Bagikan</button>
+  <button class="share" id="bagikanBtn" style="display:none">Bagikan</button>
 </p>
 </main>
   
