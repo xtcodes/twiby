@@ -96,6 +96,9 @@
       opacity: 0.6;
       cursor: not-allowed;
     }
+    .file {
+      width: 100%;
+    }
     @media (max-width: 700px) {
      main {
       margin: 0 auto;
@@ -117,7 +120,7 @@
 <p><canvas id="canvasTemp" width="1080" height="1080" style="display:none"></canvas></p>
 
 <p>
-  <button class="upload" id="unggahGambarBtn">Pilih Gambar</button>
+  <button class="upload file" id="unggahGambarBtn">Pilih Gambar</button>
   <input type="file" id="inputGambar" accept="image/*" style="display:none">
   <button class="upload" id="unggahTwibbonBtn" style="display:none">Pilih Twibbon</button>
   <input type="file" id="inputTwibbon" accept="image/png" style="display:none">
