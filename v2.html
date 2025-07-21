@@ -259,6 +259,23 @@
       baseImage.src = URL.createObjectURL(file);
     });
 
+    twibbonInputBtn.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        overlayImage = new Image();
+        overlayImage.onload = () => {
+          overlayLoaded = true;
+          draw();
+        };
+        overlayImage.src = URL.createObjectURL(file);
+      };
+      input.click();
+    });
+
     downloadBtn.addEventListener('click', () => {
       overlay.style.display = 'flex';
       spinner.style.display = 'block';
@@ -298,7 +315,8 @@
       buttonText.style.display = 'block';
       actions.style.display = 'none';
       downloadNote.style.display = 'none';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      twibbonInputBtn.style.display = 'none';
+      shareBtn.style.display = 'none';
       draw();
     });
 
