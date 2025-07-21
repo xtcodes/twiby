@@ -72,6 +72,10 @@
     #shareBtn {
       background-color: #007BFF;
     }
+    #resetBtn {
+      background-color: #dc3545;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -84,6 +88,7 @@
   <div class="action-buttons" id="actions">
     <button id="downloadBtn">Unduh Hasil</button>
     <button id="shareBtn">Bagikan</button>
+    <button id="resetBtn">Reset Awal</button>
   </div>
 
   <script>
@@ -94,6 +99,7 @@
     const actions = document.getElementById('actions');
     const downloadBtn = document.getElementById('downloadBtn');
     const shareBtn = document.getElementById('shareBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
     let baseImage = null;
     let overlayImage = new Image();
@@ -194,35 +200,41 @@
         imageInput.style.display = 'none';
         buttonText.style.display = 'none';
         actions.style.display = 'flex';
+        downloadBtn.style.display = 'inline-block';
+        resetBtn.style.display = 'none';
       };
       baseImage.src = URL.createObjectURL(file);
     });
 
     downloadBtn.addEventListener('click', () => {
-  const link = document.createElement('a');
-  link.download = 'twibbon.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+      const link = document.createElement('a');
+      link.download = 'twibbon.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
 
-  // Reset semua nilai
-  baseImage = null;
-  scale = 1;
-  lastScale = 1;
-  offsetX = 0;
-  offsetY = 0;
-  lastX = 0;
-  lastY = 0;
-  isDragging = false;
-  interactionOngoing = false;
-  imageInput.value = '';
+      // Tampilkan tombol reset setelah unduh
+      downloadBtn.style.display = 'none';
+      resetBtn.style.display = 'inline-block';
+    });
 
-  // Kembalikan tampilan awal
-  imageInput.style.display = 'block';
-  buttonText.style.display = 'block';
-  actions.style.display = 'none';
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(placeholderImg, 0, 0, canvas.width, canvas.height);
-});
+    resetBtn.addEventListener('click', () => {
+      baseImage = null;
+      scale = 1;
+      lastScale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      lastX = 0;
+      lastY = 0;
+      isDragging = false;
+      interactionOngoing = false;
+      imageInput.value = '';
+
+      imageInput.style.display = 'block';
+      buttonText.style.display = 'block';
+      actions.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(placeholderImg, 0, 0, canvas.width, canvas.height);
+    });
 
     shareBtn.addEventListener('click', async () => {
       if (!navigator.share) {
