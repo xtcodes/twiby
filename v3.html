@@ -38,7 +38,7 @@
       width: 200px;
       height: 50px;
       opacity: 0;
-      cursor: none;
+      cursor: pointer;
     }
     .button-placeholder {
       position: absolute;
@@ -66,7 +66,7 @@
       color: white;
       border: none;
       border-radius: 8px;
-      cursor: none;
+      cursor: pointer;
       font-size: 16px;
     }
     #shareBtn {
@@ -104,6 +104,16 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+    #fallbackDownload {
+      display: none;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #333;
+    }
+    #fallbackDownload a {
+      color: #007BFF;
+      text-decoration: underline;
+    }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -126,6 +136,9 @@
     <button id="shareBtn">Bagikan</button>
     <button id="resetBtn">Reset Awal</button>
   </div>
+  <div id="fallbackDownload">
+    Jika unduhan tidak dimulai otomatis, <a id="fallbackLink" href="#" download="twibbon.png">klik di sini</a>.
+  </div>
 
   <script>
     const canvas = document.getElementById('twibbonCanvas');
@@ -138,6 +151,8 @@
     const resetBtn = document.getElementById('resetBtn');
     const overlayDiv = document.getElementById('processingOverlay');
     const processingText = document.getElementById('processingText');
+    const fallbackDownload = document.getElementById('fallbackDownload');
+    const fallbackLink = document.getElementById('fallbackLink');
 
     let baseImage = null;
     let overlayImage = new Image();
@@ -257,10 +272,14 @@
           clearInterval(timer);
           overlayDiv.style.display = 'none';
 
+          const dataURL = canvas.toDataURL('image/png');
           const link = document.createElement('a');
           link.download = 'twibbon.png';
-          link.href = canvas.toDataURL('image/png');
+          link.href = dataURL;
           link.click();
+
+          fallbackLink.href = dataURL;
+          fallbackDownload.style.display = 'block';
 
           downloadBtn.style.display = 'none';
           resetBtn.style.display = 'inline-block';
@@ -283,6 +302,7 @@
       imageInput.style.display = 'block';
       buttonText.style.display = 'block';
       actions.style.display = 'none';
+      fallbackDownload.style.display = 'none';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(placeholderImg, 0, 0, canvas.width, canvas.height);
     });
