@@ -19,6 +19,7 @@
       position: relative;
       width: 300px;
       height: 300px;
+      touch-action: none;
     }
     canvas {
       width: 100%;
@@ -26,6 +27,7 @@
       background-color: #ccc;
       display: block;
       border-radius: 10px;
+      touch-action: none;
     }
     #imageInput {
       position: absolute;
@@ -91,12 +93,73 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const shareBtn = document.getElementById('shareBtn');
 
-    const twibbonOverlay = new Image();
-    twibbonOverlay.src = 'twibbon.png';
+    let baseImage = null;
+    let overlayImage = new Image();
+    overlayImage.src = 'twibbon.png';
+
+    let scale = 1;
+    let lastScale = 1;
+    let startDist = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let isDragging = false;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (baseImage) {
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        ctx.scale(scale, scale);
+        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+      }
+      if (overlayImage.complete) {
+        ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+      }
+    };
+
+    const getTouchDistance = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        startDist = getTouchDistance(e.touches);
+        lastScale = scale;
+      }
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging) {
+        const dx = e.touches[0].clientX - lastX;
+        const dy = e.touches[0].clientY - lastY;
+        offsetX += dx;
+        offsetY += dy;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+        draw();
+      } else if (e.touches.length === 2) {
+        const dist = getTouchDistance(e.touches);
+        scale = lastScale * (dist / startDist);
+        draw();
+      }
+    });
+
+    canvas.addEventListener('touchend', () => {
+      isDragging = false;
+    });
 
     const placeholderImg = new Image();
     placeholderImg.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(placeholderImg, 0, 0, canvas.width, canvas.height);
     };
     placeholderImg.src = 'https://via.placeholder.com/300x300.png?text=Placeholder';
@@ -104,25 +167,17 @@
     imageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
-      const img = new Image();
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        if (twibbonOverlay.complete) {
-          ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
-        } else {
-          twibbonOverlay.onload = () => {
-            ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
-          };
-        }
-
-        imageInput.style.display = 'none';        // ✅ Disembunyikan
-        buttonText.style.display = 'none';        // ✅ Label juga disembunyikan
-        actions.style.display = 'flex';           // ✅ Tampilkan tombol aksi
+      baseImage = new Image();
+      baseImage.onload = () => {
+        scale = 1;
+        offsetX = 0;
+        offsetY = 0;
+        draw();
+        imageInput.style.display = 'none';
+        buttonText.style.display = 'none';
+        actions.style.display = 'flex';
       };
-      img.src = URL.createObjectURL(file);
+      baseImage.src = URL.createObjectURL(file);
     });
 
     downloadBtn.addEventListener('click', () => {
@@ -137,20 +192,17 @@
         alert('Fitur berbagi tidak didukung di browser ini.');
         return;
       }
-
       canvas.toBlob(async (blob) => {
         if (!blob) {
           alert('Gagal menyiapkan gambar untuk dibagikan.');
           return;
         }
-
         const file = new File([blob], 'twibbon.png', { type: 'image/png' });
         const shareData = {
           title: 'Twibbon Saya',
           text: 'Lihat hasil twibbon saya!',
           files: [file]
         };
-
         try {
           if (navigator.canShare && navigator.canShare(shareData)) {
             await navigator.share(shareData);
