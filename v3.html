@@ -15,14 +15,13 @@
       background: #f0f0f0;
       flex-direction: column;
     }
-  /*  .container {
+    .container {
       position: relative;
       width: 300px;
       height: 300px;
       touch-action: none;
-    } */
-    .container {
-      position: relative;
+    } 
+    main {
       touch-action: none;
       width: 600px;
       margin: 5em auto;
@@ -133,7 +132,7 @@
       100% { transform: rotate(360deg); }
     }
     @media (max-width: 700px) {
-    .container {
+    main {
       margin: 0 auto;
       width: auto;
       }
@@ -141,6 +140,7 @@
   </style>
 </head>
 <body>
+  <main>
   <div class="container">
     <canvas id="twibbonCanvas" width="300" height="300"></canvas>
     <div id="processingOverlay">
@@ -159,7 +159,8 @@
   <div id="fallbackDownload">
     Jika unduhan tidak dimulai otomatis, <a id="fallbackLink" href="#" download="twibbon.png">klik di sini</a>.
   </div>
-
+  </main>
+  
   <script>
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
