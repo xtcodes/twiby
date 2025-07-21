@@ -45,13 +45,15 @@
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-      background-color: #007BFF;
+      background-color: rgba(0, 123, 255, 0.3);
       color: white;
       padding: 12px 24px;
       border-radius: 8px;
       text-align: center;
       z-index: 5;
       pointer-events: none;
+      font-size: clamp(14px, 4vw, 18px);
+      font-weight: bold;
     }
     .action-buttons {
       margin-top: 20px;
@@ -76,7 +78,7 @@
   <div class="container">
     <canvas id="twibbonCanvas" width="300" height="300"></canvas>
     <input type="file" accept="image/*" id="imageInput" />
-    <div class="button-placeholder" id="buttonText">Unggah Gambar</div>
+    <div class="button-placeholder" id="buttonText">UNGGAH GAMBAR</div>
   </div>
 
   <div class="action-buttons" id="actions">
