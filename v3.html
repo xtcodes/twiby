@@ -76,11 +76,47 @@
       background-color: #dc3545;
       display: none;
     }
+    #processingOverlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(128, 128, 128, 0.7);
+      top: 0;
+      left: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 10px;
+      flex-direction: column;
+      z-index: 20;
+    }
+    .spinner {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      border: 3px solid white;
+      border-top: 3px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <canvas id="twibbonCanvas" width="300" height="300"></canvas>
+    <div id="processingOverlay">
+      <div id="processingText">Sedang proses...</div>
+      <div class="spinner"></div>
+    </div>
     <input type="file" accept="image/*" id="imageInput" />
     <div class="button-placeholder" id="buttonText">UNGGAH GAMBAR</div>
   </div>
@@ -100,6 +136,8 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const shareBtn = document.getElementById('shareBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const overlayDiv = document.getElementById('processingOverlay');
+    const processingText = document.getElementById('processingText');
 
     let baseImage = null;
     let overlayImage = new Image();
@@ -207,14 +245,26 @@
     });
 
     downloadBtn.addEventListener('click', () => {
-      const link = document.createElement('a');
-      link.download = 'twibbon.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      overlayDiv.style.display = 'flex';
+      let countdown = 15;
+      processingText.textContent = `Sedang proses... (${countdown})`;
 
-      // Tampilkan tombol reset setelah unduh
-      downloadBtn.style.display = 'none';
-      resetBtn.style.display = 'inline-block';
+      const timer = setInterval(() => {
+        countdown--;
+        processingText.textContent = `Sedang proses... (${countdown})`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          overlayDiv.style.display = 'none';
+
+          const link = document.createElement('a');
+          link.download = 'twibbon.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+
+          downloadBtn.style.display = 'none';
+          resetBtn.style.display = 'inline-block';
+        }
+      }, 1000);
     });
 
     resetBtn.addEventListener('click', () => {
