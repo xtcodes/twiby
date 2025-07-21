@@ -59,8 +59,6 @@
       margin-top: 20px;
       display: none;
       gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
     }
     .action-buttons button {
       padding: 10px 20px;
@@ -126,7 +124,7 @@
 <body>
   <div class="container">
     <canvas id="twibbonCanvas" width="300" height="300"></canvas>
-    <div id="processingOverlay">Sedang proses...</div>
+    <div id="processingOverlay">Sedang proses... (<span id="countdown">15</span>s)</div>
     <div id="spinner"></div>
     <input type="file" accept="image/*" id="imageInput" />
     <div class="button-placeholder" id="buttonText">UNGGAH GAMBAR</div>
@@ -139,7 +137,7 @@
     <button id="twibbonInputBtn">Unggah Twibbon</button>
   </div>
 
-  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#" download>klik di sini</a>.</div>
+  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#">klik di sini</a>.</div>
 
   <script>
     const canvas = document.getElementById('twibbonCanvas');
@@ -155,6 +153,7 @@
     const overlay = document.getElementById('processingOverlay');
     const downloadNote = document.getElementById('downloadNote');
     const manualDownload = document.getElementById('manualDownload');
+    const countdown = document.getElementById('countdown');
 
     let baseImage = null;
     let overlayImage = new Image();
@@ -261,47 +260,37 @@
       baseImage.src = URL.createObjectURL(file);
     });
 
-    twibbonInputBtn.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        overlayImage = new Image();
-        overlayImage.onload = () => {
-          overlayLoaded = true;
-          draw();
-        };
-        overlayImage.src = URL.createObjectURL(file);
-      };
-      input.click();
-    });
-
     downloadBtn.addEventListener('click', () => {
+      let counter = 15;
       overlay.style.display = 'flex';
       spinner.style.display = 'block';
+      countdown.textContent = counter;
 
-      setTimeout(() => {
-        overlay.style.display = 'none';
-        spinner.style.display = 'none';
+      const countdownInterval = setInterval(() => {
+        counter--;
+        countdown.textContent = counter;
+        if (counter <= 0) {
+          clearInterval(countdownInterval);
 
-        const dataURL = canvas.toDataURL('image/png');
+          overlay.style.display = 'none';
+          spinner.style.display = 'none';
 
-        const link = document.createElement('a');
-        link.download = 'twibbon.png';
-        link.href = dataURL;
-        link.click();
+          const dataURL = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = 'twibbon.png';
+          link.href = dataURL;
+          link.click();
 
-        manualDownload.href = dataURL;
-        manualDownload.setAttribute('download', 'twibbon.png');
-        downloadNote.style.display = 'block';
+          manualDownload.href = dataURL;
+          manualDownload.setAttribute('download', 'twibbon.png');
+          downloadNote.style.display = 'block';
 
-        downloadBtn.style.display = 'none';
-        shareBtn.style.display = 'inline-block';
-        resetBtn.style.display = 'inline-block';
-        twibbonInputBtn.style.display = 'none';
-      }, 15000);
+          downloadBtn.style.display = 'none';
+          shareBtn.style.display = 'inline-block';
+          resetBtn.style.display = 'inline-block';
+          twibbonInputBtn.style.display = 'none';
+        }
+      }, 1000);
     });
 
     resetBtn.addEventListener('click', () => {
