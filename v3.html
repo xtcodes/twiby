@@ -17,8 +17,8 @@
     }
     .container {
       position: relative;
-      width: 400px;
-      height: 400px;
+      width: 300px;
+      height: 300px;
       touch-action: none;
     }
     canvas {
@@ -38,7 +38,7 @@
       width: 200px;
       height: 50px;
       opacity: 0;
-      cursor: none;
+      cursor: pointer;
     }
     .button-placeholder {
       position: absolute;
@@ -66,7 +66,7 @@
       color: white;
       border: none;
       border-radius: 8px;
-      cursor: none;
+      cursor: pointer;
       font-size: 16px;
     }
     #shareBtn {
@@ -112,7 +112,7 @@
 </head>
 <body>
   <div class="container">
-    <canvas id="twibbonCanvas" width="400" height="400"></canvas>
+    <canvas id="twibbonCanvas" width="300" height="300"></canvas>
     <div id="processingOverlay">
       <div id="processingText">Sedang proses...</div>
       <div class="spinner"></div>
@@ -166,14 +166,12 @@
         const drawHeight = baseImageHeight * ratio;
         ctx.drawImage(baseImage, 0, 0, drawWidth, drawHeight);
         ctx.restore();
-      }
 
-      if (overlayImage.complete) {
-        if (interactionOngoing) {
-          ctx.globalAlpha = 0.5;
+        if (overlayImage.complete) {
+          if (interactionOngoing) ctx.globalAlpha = 0.5;
+          ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1.0;
         }
-        ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1.0;
       }
     };
 
@@ -184,6 +182,7 @@
     };
 
     canvas.addEventListener('touchstart', (e) => {
+      if (!baseImage) return;
       interactionOngoing = true;
       if (e.touches.length === 1) {
         isDragging = true;
@@ -196,6 +195,7 @@
     });
 
     canvas.addEventListener('touchmove', (e) => {
+      if (!baseImage) return;
       e.preventDefault();
       if (e.touches.length === 1 && isDragging) {
         const dx = e.touches[0].clientX - lastX;
@@ -213,6 +213,7 @@
     });
 
     canvas.addEventListener('touchend', () => {
+      if (!baseImage) return;
       interactionOngoing = false;
       isDragging = false;
       draw();
