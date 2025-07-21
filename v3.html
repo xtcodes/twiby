@@ -36,7 +36,7 @@
       opacity: 0;
       width: 200px;
       height: 50px;
-      cursor: none;
+      cursor: pointer;
     }
     .button-placeholder {
       position: absolute;
@@ -54,8 +54,12 @@
     .hidden {
       display: none;
     }
-    #downloadBtn {
+    .action-buttons {
       margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .action-buttons button {
       padding: 10px 20px;
       background-color: #28a745;
       color: white;
@@ -63,7 +67,9 @@
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
-      display: none;
+    }
+    #shareBtn {
+      background-color: #007BFF;
     }
   </style>
 </head>
@@ -73,7 +79,10 @@
     <input type="file" accept="image/*" id="imageInput">
     <div class="button-placeholder" id="buttonText">Unggah Gambar</div>
   </div>
-  <button id="downloadBtn">Unduh Hasil</button>
+  <div class="action-buttons hidden" id="actions">
+    <button id="downloadBtn">Unduh Hasil</button>
+    <button id="shareBtn">Bagikan</button>
+  </div>
 
   <script>
     const imageInput = document.getElementById('imageInput');
@@ -81,6 +90,8 @@
     const ctx = canvas.getContext('2d');
     const buttonText = document.getElementById('buttonText');
     const downloadBtn = document.getElementById('downloadBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const actions = document.getElementById('actions');
 
     const twibbonOverlay = new Image();
     twibbonOverlay.src = 'twibbon.png'; // Ganti dengan URL twibbon asli
@@ -91,7 +102,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(placeholderImg, 0, 0, canvas.width, canvas.height);
     };
-    placeholderImg.src = 'https://via.placeholder.com/300x300.png?text=Placeholder'; // Ganti sesuai kebutuhan
+    placeholderImg.src = 'https://via.placeholder.com/300x300.png?text=Placeholder';
 
     imageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -102,7 +113,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Setelah gambar dimuat, tambahkan overlay twibbon
+        // Tambahkan overlay twibbon
         twibbonOverlay.onload = () => {
           ctx.drawImage(twibbonOverlay, 0, 0, canvas.width, canvas.height);
         }
@@ -112,7 +123,7 @@
 
         imageInput.classList.add('hidden');
         buttonText.classList.add('hidden');
-        downloadBtn.style.display = 'inline-block';
+        actions.classList.remove('hidden');
       };
       img.src = URL.createObjectURL(file);
     });
@@ -122,6 +133,25 @@
       link.download = 'twibbon.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
+    });
+
+    shareBtn.addEventListener('click', async () => {
+      if (navigator.canShare && navigator.canShare({ files: [] })) {
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], 'twibbon.png', { type: 'image/png' });
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Twibbon Saya',
+              text: 'Lihat hasil twibbon saya!'
+            });
+          } catch (err) {
+            alert('Gagal membagikan: ' + err);
+          }
+        });
+      } else {
+        alert('Fitur Web Share tidak didukung di browser ini.');
+      }
     });
   </script>
 </body>
