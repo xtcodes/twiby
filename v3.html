@@ -105,6 +105,9 @@
     let lastX = 0;
     let lastY = 0;
     let isDragging = false;
+    let interactionOngoing = false;
+    let baseImageWidth = 0;
+    let baseImageHeight = 0;
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -112,11 +115,19 @@
         ctx.save();
         ctx.translate(offsetX, offsetY);
         ctx.scale(scale, scale);
-        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+        const ratio = Math.min(canvas.width / baseImageWidth, canvas.height / baseImageHeight);
+        const drawWidth = baseImageWidth * ratio;
+        const drawHeight = baseImageHeight * ratio;
+        ctx.drawImage(baseImage, 0, 0, drawWidth, drawHeight);
         ctx.restore();
       }
+
       if (overlayImage.complete) {
+        if (interactionOngoing) {
+          ctx.globalAlpha = 0.5;
+        }
         ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1.0;
       }
     };
 
@@ -127,6 +138,7 @@
     };
 
     canvas.addEventListener('touchstart', (e) => {
+      interactionOngoing = true;
       if (e.touches.length === 1) {
         isDragging = true;
         lastX = e.touches[0].clientX;
@@ -155,7 +167,9 @@
     });
 
     canvas.addEventListener('touchend', () => {
+      interactionOngoing = false;
       isDragging = false;
+      draw();
     });
 
     const placeholderImg = new Image();
@@ -169,6 +183,8 @@
       if (!file) return;
       baseImage = new Image();
       baseImage.onload = () => {
+        baseImageWidth = baseImage.width;
+        baseImageHeight = baseImage.height;
         scale = 1;
         offsetX = 0;
         offsetY = 0;
