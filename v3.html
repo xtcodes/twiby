@@ -36,7 +36,7 @@
       opacity: 0;
       width: 200px;
       height: 50px;
-      cursor: pointer;
+      cursor: none;
     }
     .button-placeholder {
       position: absolute;
@@ -84,6 +84,14 @@
 
     const twibbonOverlay = new Image();
     twibbonOverlay.src = 'twibbon.png'; // Ganti dengan URL twibbon asli
+
+    // Gambar placeholder awal
+    const placeholderImg = new Image();
+    placeholderImg.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(placeholderImg, 0, 0, canvas.width, canvas.height);
+    };
+    placeholderImg.src = 'https://via.placeholder.com/300x300.png?text=Placeholder'; // Ganti sesuai kebutuhan
 
     imageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
