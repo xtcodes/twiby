@@ -59,6 +59,8 @@
       margin-top: 20px;
       display: none;
       gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .action-buttons button {
       padding: 10px 20px;
@@ -137,7 +139,7 @@
     <button id="twibbonInputBtn">Unggah Twibbon</button>
   </div>
 
-  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#">klik di sini</a>.</div>
+  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#" download>klik di sini</a>.</div>
 
   <script>
     const canvas = document.getElementById('twibbonCanvas');
@@ -263,7 +265,7 @@
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
-      input.onchange = (e) => {
+      input.onchange = e => {
         const file = e.target.files[0];
         if (!file) return;
         overlayImage = new Image();
@@ -284,12 +286,15 @@
         overlay.style.display = 'none';
         spinner.style.display = 'none';
 
+        const dataURL = canvas.toDataURL('image/png');
+
         const link = document.createElement('a');
         link.download = 'twibbon.png';
-        link.href = canvas.toDataURL('image/png');
+        link.href = dataURL;
         link.click();
 
-        manualDownload.href = link.href;
+        manualDownload.href = dataURL;
+        manualDownload.setAttribute('download', 'twibbon.png');
         downloadNote.style.display = 'block';
 
         downloadBtn.style.display = 'none';
@@ -315,8 +320,6 @@
       buttonText.style.display = 'block';
       actions.style.display = 'none';
       downloadNote.style.display = 'none';
-      twibbonInputBtn.style.display = 'none';
-      shareBtn.style.display = 'none';
       draw();
     });
 
