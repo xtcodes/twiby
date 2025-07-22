@@ -7,20 +7,22 @@
   <link rel="stylesheet" href="#" />
   <style>
     body {
-  margin: 0;
+  margin: 5em auto;
+      padding: 2em;
   font-family: sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   background: #f0f0f0;
-  height: 100vh;
+ /* height: 100vh; */
 }
 
 .container {
+  width: 600px;
   position: relative;
-  width: 300px;
-  height: 300px;
+/*  width: 300px;
+  height: 300px; */
   touch-action: none;
 }
 
@@ -138,6 +140,16 @@ canvas {
   display: none;
   color: #333;
 }
+    a:link, a:visited {
+        color: #38488f;
+        text-decoration: none;
+    }
+    @media (max-width: 700px) {
+        .container {
+            margin: 0 auto;
+            width: auto;
+        }
+  }
 
   </style>
 </head>
