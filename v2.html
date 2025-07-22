@@ -160,233 +160,208 @@ canvas {
   </div>
 
   <script>
-    const canvas = document.getElementById('twibbonCanvas');
+        const canvas = document.getElementById('twibbonCanvas');
 const ctx = canvas.getContext('2d');
 const imageInput = document.getElementById('imageInput');
-const buttonText = document.getElementById('buttonText');
-const actions = document.getElementById('actions');
 const downloadBtn = document.getElementById('downloadBtn');
 const shareBtn = document.getElementById('shareBtn');
 const resetBtn = document.getElementById('resetBtn');
 const twibbonInputBtn = document.getElementById('twibbonInputBtn');
+const processingOverlay = document.getElementById('processingOverlay');
 const spinner = document.getElementById('spinner');
-const overlay = document.getElementById('processingOverlay');
-const downloadNote = document.getElementById('downloadNote');
+const countdownEl = document.getElementById('countdown');
 const manualDownload = document.getElementById('manualDownload');
+const downloadNote = document.getElementById('downloadNote');
+const buttonText = document.getElementById('buttonText');
+const actions = document.getElementById('actions');
 
-let baseImage = null;
-let overlayImage = new Image();
-let overlayLoaded = false;
-let customOverlayLoaded = false;
-let customOverlayImage = null;
-let placeholderImage = new Image();
-placeholderImage.src = 'https://via.placeholder.com/300x300.png?text=PLACEHOLDER';
-
-overlayImage.onload = () => {
-  overlayLoaded = true;
-  if (baseImage) draw();
-};
-
-let showTwibbon = false;
-let scale = 1;
-let lastScale = 1;
-let startDist = 0;
+let userImage = null;
+let twibbonImage = null;
+let twibbonReady = false;
+let isDragging = false;
+let lastTouchDist = null;
 let offsetX = 0;
 let offsetY = 0;
-let lastX = 0;
-let lastY = 0;
-let isDragging = false;
-let interactionOngoing = false;
-let baseImageWidth = 0;
-let baseImageHeight = 0;
+let scale = 1;
+let startX, startY;
 
-const draw = () => {
+const placeholderImage = new Image();
+placeholderImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
+
+const defaultTwibbon = new Image();
+defaultTwibbon.src = 'twibbon.png'; // ← file default Anda
+defaultTwibbon.onload = () => {
+  twibbonImage = defaultTwibbon;
+  drawCanvas();
+};
+
+function drawCanvas(isInteracting = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!baseImage) {
+  if (userImage) {
+    const imgWidth = userImage.width * scale;
+    const imgHeight = userImage.height * scale;
+    ctx.drawImage(userImage, offsetX, offsetY, imgWidth, imgHeight);
+  } else {
     ctx.drawImage(placeholderImage, 0, 0, canvas.width, canvas.height);
-    return;
   }
 
-  ctx.save();
-  ctx.translate(offsetX, offsetY);
-  ctx.scale(scale, scale);
-  const ratio = Math.min(canvas.width / baseImageWidth, canvas.height / baseImageHeight);
-  const drawWidth = baseImageWidth * ratio;
-  const drawHeight = baseImageHeight * ratio;
-  ctx.drawImage(baseImage, 0, 0, drawWidth, drawHeight);
-  ctx.restore();
-
-  if (showTwibbon) {
-    ctx.globalAlpha = interactionOngoing ? 0.5 : 1.0;
-    const twibbonToUse = customOverlayLoaded && customOverlayImage ? customOverlayImage : overlayImage;
-    ctx.drawImage(twibbonToUse, 0, 0, canvas.width, canvas.height);
+  if (twibbonImage && userImage) {
+    if (isInteracting) {
+      ctx.globalAlpha = 0.5;
+    }
+    ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1.0;
   }
-};
-
-const getTouchDistance = (touches) => {
-  const dx = touches[0].clientX - touches[1].clientX;
-  const dy = touches[0].clientY - touches[1].clientY;
-  return Math.sqrt(dx * dx + dy * dy);
-};
+}
 
 canvas.addEventListener('touchstart', (e) => {
-  if (!baseImage) return;
-  interactionOngoing = true;
   if (e.touches.length === 1) {
     isDragging = true;
-    lastX = e.touches[0].clientX;
-    lastY = e.touches[0].clientY;
+    startX = e.touches[0].clientX - offsetX;
+    startY = e.touches[0].clientY - offsetY;
   } else if (e.touches.length === 2) {
-    startDist = getTouchDistance(e.touches);
-    lastScale = scale;
+    lastTouchDist = getTouchDistance(e.touches);
   }
 });
 
 canvas.addEventListener('touchmove', (e) => {
-  if (!baseImage) return;
   e.preventDefault();
   if (e.touches.length === 1 && isDragging) {
-    const dx = e.touches[0].clientX - lastX;
-    const dy = e.touches[0].clientY - lastY;
-    offsetX += dx;
-    offsetY += dy;
-    lastX = e.touches[0].clientX;
-    lastY = e.touches[0].clientY;
-    draw();
+    offsetX = e.touches[0].clientX - startX;
+    offsetY = e.touches[0].clientY - startY;
+    drawCanvas(true);
   } else if (e.touches.length === 2) {
     const dist = getTouchDistance(e.touches);
-    scale = lastScale * (dist / startDist);
-    draw();
+    if (lastTouchDist) {
+      const zoom = dist / lastTouchDist;
+      scale *= zoom;
+      lastTouchDist = dist;
+      drawCanvas(true);
+    }
   }
 });
 
 canvas.addEventListener('touchend', () => {
-  interactionOngoing = false;
   isDragging = false;
-  draw();
+  lastTouchDist = null;
+  drawCanvas();
 });
+
+function getTouchDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 
 imageInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  baseImage = new Image();
-  baseImage.onload = () => {
-    baseImageWidth = baseImage.width;
-    baseImageHeight = baseImage.height;
-    scale = 1;
-    offsetX = 0;
-    offsetY = 0;
-    draw();
-    imageInput.style.display = 'none';
-    buttonText.style.display = 'none';
-    actions.style.display = 'flex';
-    downloadBtn.style.display = 'inline-block';
-    resetBtn.style.display = 'none';
-    twibbonInputBtn.style.display = 'inline-block';
-    showTwibbon = true;
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const img = new Image();
+    img.onload = function () {
+      userImage = img;
+      offsetX = 0;
+      offsetY = 0;
+      scale = 1;
+      drawCanvas();
+      actions.style.display = 'flex';
+      downloadBtn.style.display = 'inline-block';
+      twibbonInputBtn.style.display = 'inline-block';
+      imageInput.style.display = 'none';
+      buttonText.style.display = 'none';
+    };
+    img.src = event.target.result;
   };
-  baseImage.src = URL.createObjectURL(file);
+  reader.readAsDataURL(file);
 });
 
 twibbonInputBtn.addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
-  input.onchange = (e) => {
+  input.onchange = function (e) {
     const file = e.target.files[0];
     if (!file) return;
-    const img = new Image();
-    img.onload = () => {
-      customOverlayImage = img;
-      customOverlayLoaded = true;
-      draw();
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const img = new Image();
+      img.onload = function () {
+        twibbonImage = img;
+        drawCanvas();
+      };
+      img.src = event.target.result;
     };
-    img.src = URL.createObjectURL(file);
+    reader.readAsDataURL(file);
   };
   input.click();
 });
 
 downloadBtn.addEventListener('click', () => {
-  overlay.style.display = 'flex';
+  processingOverlay.style.display = 'flex';
   spinner.style.display = 'block';
-
-  let counter = 15;
-  overlay.textContent = `Sedang proses... (${counter})`;
+  let count = 15;
+  countdownEl.textContent = count;
   const countdown = setInterval(() => {
-    counter--;
-    overlay.textContent = `Sedang proses... (${counter})`;
-    if (counter <= 0) {
+    count--;
+    countdownEl.textContent = count;
+    if (count <= 0) {
       clearInterval(countdown);
-      overlay.style.display = 'none';
       spinner.style.display = 'none';
-
+      processingOverlay.style.display = 'none';
       const link = document.createElement('a');
       link.download = 'twibbon.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
-
       manualDownload.href = link.href;
       downloadNote.style.display = 'block';
-
-      downloadBtn.style.display = 'none';
       shareBtn.style.display = 'inline-block';
       resetBtn.style.display = 'inline-block';
+      downloadBtn.style.display = 'none';
       twibbonInputBtn.style.display = 'none';
     }
   }, 1000);
 });
 
 resetBtn.addEventListener('click', () => {
-  baseImage = null;
-  scale = 1;
-  lastScale = 1;
+  userImage = null;
   offsetX = 0;
   offsetY = 0;
-  lastX = 0;
-  lastY = 0;
-  isDragging = false;
-  interactionOngoing = false;
-  imageInput.value = '';
-  showTwibbon = false;
-  customOverlayLoaded = false;
-
-  imageInput.style.display = 'block';
-  buttonText.style.display = 'block';
+  scale = 1;
   actions.style.display = 'none';
   downloadNote.style.display = 'none';
-  draw();
+  shareBtn.style.display = 'none';
+  resetBtn.style.display = 'none';
+  imageInput.value = '';
+  imageInput.style.display = 'block';
+  buttonText.style.display = 'block';
+  drawCanvas();
 });
 
 shareBtn.addEventListener('click', async () => {
-  if (!navigator.share) {
-    alert('Fitur berbagi tidak didukung di browser ini.');
-    return;
-  }
-  canvas.toBlob(async (blob) => {
-    if (!blob) {
-      alert('Gagal menyiapkan gambar untuk dibagikan.');
-      return;
-    }
+  if (navigator.canShare && navigator.canShare({ files: [] })) {
+    const blob = await new Promise(resolve =>
+      canvas.toBlob(resolve, 'image/png')
+    );
     const file = new File([blob], 'twibbon.png', { type: 'image/png' });
-    const shareData = {
-      title: 'Twibbon Saya',
-      text: 'Lihat hasil twibbon saya!',
-      files: [file]
-    };
     try {
-      if (navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        alert('Perangkat ini tidak mendukung berbagi file gambar.');
-      }
+      await navigator.share({
+        files: [file],
+        title: 'Twibbon Saya',
+        text: 'Lihat hasil Twibbon saya!'
+      });
     } catch (err) {
-      console.error('Gagal membagikan:', err);
-      alert('Terjadi kesalahan saat mencoba membagikan.');
+      alert('Gagal membagikan gambar.');
     }
-  }, 'image/png');
+  } else {
+    alert('Fitur bagikan tidak didukung di perangkat ini.');
+  }
 });
+
+// Inisialisasi awal
+drawCanvas();
 
   </script>
 </body>
