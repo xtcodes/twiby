@@ -134,7 +134,7 @@ canvas {
 
 #downloadNote {
   margin-top: 10px;
-  font-size: 14px;
+  font-size: 16px;
   display: none;
   color: #333;
 }
@@ -179,6 +179,7 @@ const actions = document.getElementById('actions');
 
 let userImage = null;
 let twibbonImage = null;
+let twibbonReady = false;
 let isDragging = false;
 let lastTouchDist = null;
 let offsetX = 0;
@@ -186,9 +187,11 @@ let offsetY = 0;
 let scale = 1;
 let startX, startY;
 
+// Placeholder SVG
 const placeholderImage = new Image();
 placeholderImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
 
+// Default twibbon
 const defaultTwibbon = new Image();
 defaultTwibbon.src = 'twibbon.png';
 defaultTwibbon.onload = () => {
@@ -200,15 +203,26 @@ function drawCanvas(isInteracting = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (userImage) {
-    const imgWidth = userImage.width * scale;
-    const imgHeight = userImage.height * scale;
-    ctx.drawImage(userImage, offsetX, offsetY, imgWidth, imgHeight);
+    // Ukuran asli dan proporsional
+    const aspectRatio = userImage.width / userImage.height;
+    let drawWidth = userImage.width * scale;
+    let drawHeight = userImage.height * scale;
+
+    if (drawWidth > canvas.width || drawHeight > canvas.height) {
+      const ratio = Math.min(canvas.width / drawWidth, canvas.height / drawHeight);
+      drawWidth *= ratio;
+      drawHeight *= ratio;
+    }
+
+    ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
   } else {
+    // Selalu tampilkan placeholder
     ctx.drawImage(placeholderImage, 0, 0, canvas.width, canvas.height);
   }
 
-  if (twibbonImage) {
-    ctx.globalAlpha = userImage && isInteracting ? 0.5 : 1.0;
+  // Tampilkan twibbon hanya jika ada userImage
+  if (twibbonImage && userImage) {
+    ctx.globalAlpha = isInteracting ? 0.5 : 1;
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1.0;
   }
@@ -262,12 +276,9 @@ imageInput.addEventListener('change', (e) => {
     const img = new Image();
     img.onload = function () {
       userImage = img;
-
-      // Reset posisi ke tengah
+      offsetX = 0;
+      offsetY = 0;
       scale = 1;
-      offsetX = (canvas.width - img.width) / 2;
-      offsetY = (canvas.height - img.height) / 2;
-
       drawCanvas();
       actions.style.display = 'flex';
       downloadBtn.style.display = 'inline-block';
@@ -304,35 +315,30 @@ twibbonInputBtn.addEventListener('click', () => {
 downloadBtn.addEventListener('click', () => {
   processingOverlay.style.display = 'flex';
   spinner.style.display = 'block';
-
   let count = 15;
   countdownEl.textContent = count;
-
   const countdown = setInterval(() => {
     count--;
     countdownEl.textContent = count;
-
     if (count <= 0) {
       clearInterval(countdown);
       spinner.style.display = 'none';
       processingOverlay.style.display = 'none';
 
-      setTimeout(() => {
-        const imageData = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = 'twibbon.png';
-        link.href = imageData;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      const dataURL = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'twibbon.png';
+      link.href = dataURL;
+      link.click();
 
-        manualDownload.href = imageData;
-        downloadNote.style.display = 'block';
-        shareBtn.style.display = 'inline-block';
-        resetBtn.style.display = 'inline-block';
-        downloadBtn.style.display = 'none';
-        twibbonInputBtn.style.display = 'none';
-      }, 100);
+      // Update alternative download link
+      manualDownload.href = dataURL;
+      downloadNote.style.display = 'block';
+
+      shareBtn.style.display = 'inline-block';
+      resetBtn.style.display = 'inline-block';
+      downloadBtn.style.display = 'none';
+      twibbonInputBtn.style.display = 'none';
     }
   }, 1000);
 });
@@ -374,7 +380,7 @@ shareBtn.addEventListener('click', async () => {
   }
 });
 
-// Inisialisasi awal
+// Gambar awal
 drawCanvas();
 
   </script>
