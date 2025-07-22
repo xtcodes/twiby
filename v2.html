@@ -19,7 +19,7 @@
 }
 
 .container {
-  width: 600px;
+  max-width: 240px;
   position: relative;
 /*  width: 300px;
   height: 300px; */
@@ -144,10 +144,11 @@ canvas {
         color: #38488f;
         text-decoration: none;
     }
-    @media (max-width: 700px) {
+    @media (min-width: 640px) {
         .container {
-            margin: 0 auto;
-            width: auto;
+          max-width: none;
+           /* margin: 0 auto;
+            width: auto; */
         }
   }
 
