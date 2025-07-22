@@ -2,103 +2,114 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Alat Twibbon</title>
   <style>
     body {
       margin: 0;
       font-family: sans-serif;
-      background: #f0f0f0;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      min-height: 100vh;
-    }
-    canvas {
-      border: 1px solid #ccc;
-      background-color: #eee;
-      touch-action: none;
+      align-items: center;
+      height: 100vh;
+      background: #f0f0f0;
+      flex-direction: column;
     }
     .container {
       position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      width: 300px;
+      height: 300px;
+      touch-action: none;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      background-color: #ccc;
+      display: block;
+      border-radius: 10px;
+      touch-action: none;
     }
     #imageInput {
       display: none;
     }
-    .button-placeholder {
+    #uploadImageBtn {
       position: absolute;
-      top: 50%;
       left: 50%;
+      top: 50%;
       transform: translate(-50%, -50%);
-      padding: 12px 24px;
-      background: rgba(255, 255, 255, 0.6);
-      border: 2px dashed #555;
-      border-radius: 10px;
+      z-index: 10;
+      width: 200px;
+      height: 50px;
+      background-color: rgba(0, 123, 255, 0.7);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
-      font-size: 18px;
-      text-align: center;
-      user-select: none;
     }
     .action-buttons {
-      display: none;
       margin-top: 20px;
+      display: none;
       gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
     }
     .action-buttons button {
       padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      background-color: #4caf50;
+      background-color: #28a745;
       color: white;
-      border-radius: 5px;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
+      font-size: 16px;
+    }
+    #shareBtn {
+      background-color: #007BFF;
+      display: none;
+    }
+    #resetBtn {
+      background-color: #dc3545;
+      display: none;
+    }
+    #twibbonInputBtn {
+      background-color: #ffc107;
+      display: none;
+    }
+    #spinner {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      border: 4px solid #fff;
+      border-top: 4px solid #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+      z-index: 20;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     #processingOverlay {
-      display: none;
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
+      background-color: rgba(200, 200, 200, 0.8);
+      color: #333;
       font-size: 18px;
       font-weight: bold;
+      display: none;
       justify-content: center;
       align-items: center;
-      z-index: 2;
-    }
-    #spinner {
-      display: none;
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      width: 24px;
-      height: 24px;
-      border: 3px solid #fff;
-      border-top: 3px solid #888;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      z-index: 3;
-    }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
+      z-index: 15;
     }
     #downloadNote {
       margin-top: 10px;
+      font-size: 14px;
       display: none;
-    }
-    #downloadNote a {
-      color: #007bff;
-      text-decoration: underline;
+      color: #333;
     }
   </style>
 </head>
@@ -107,8 +118,8 @@
     <canvas id="twibbonCanvas" width="300" height="300"></canvas>
     <div id="processingOverlay">Sedang proses... <span id="countdown">15</span> detik</div>
     <div id="spinner"></div>
+    <button id="uploadImageBtn">Unggah Gambar</button>
     <input type="file" accept="image/*" id="imageInput" />
-    <div class="button-placeholder" id="buttonText">UNGGAH GAMBAR</div>
   </div>
 
   <div class="action-buttons" id="actions">
@@ -118,13 +129,13 @@
     <button id="twibbonInputBtn">Unggah Twibbon</button>
   </div>
 
-  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#" download="twibbon.png">klik di sini</a>.</div>
+  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#" download>klik di sini</a>.</div>
 
   <script>
     const canvas = document.getElementById('twibbonCanvas');
     const ctx = canvas.getContext('2d');
     const imageInput = document.getElementById('imageInput');
-    const buttonText = document.getElementById('buttonText');
+    const uploadImageBtn = document.getElementById('uploadImageBtn');
     const actions = document.getElementById('actions');
     const downloadBtn = document.getElementById('downloadBtn');
     const shareBtn = document.getElementById('shareBtn');
@@ -132,27 +143,20 @@
     const twibbonInputBtn = document.getElementById('twibbonInputBtn');
     const spinner = document.getElementById('spinner');
     const overlay = document.getElementById('processingOverlay');
-    const countdownEl = document.getElementById('countdown');
+    const countdown = document.getElementById('countdown');
     const downloadNote = document.getElementById('downloadNote');
     const manualDownload = document.getElementById('manualDownload');
 
     let baseImage = null;
-    let overlayImage = new Image();
+    let overlayImage = null;
     let overlayLoaded = false;
-    let twibbonUploaded = false;
 
     let scale = 1, lastScale = 1, startDist = 0;
-    let offsetX = 0, offsetY = 0;
-    let lastX = 0, lastY = 0;
+    let offsetX = 0, offsetY = 0, lastX = 0, lastY = 0;
     let isDragging = false, interactionOngoing = false;
     let baseImageWidth = 0, baseImageHeight = 0;
 
-    overlayImage.onload = () => {
-      overlayLoaded = true;
-      draw();
-    };
-
-    function draw() {
+    const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (baseImage) {
         ctx.save();
@@ -163,23 +167,19 @@
         const drawHeight = baseImageHeight * ratio;
         ctx.drawImage(baseImage, 0, 0, drawWidth, drawHeight);
         ctx.restore();
-      } else {
-        ctx.fillStyle = '#ccc';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
-
-      if (overlayLoaded && baseImage) {
+      if (overlayImage && overlayLoaded) {
         ctx.globalAlpha = interactionOngoing ? 0.5 : 1.0;
         ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1.0;
       }
-    }
+    };
 
-    function getTouchDistance(touches) {
+    const getTouchDistance = (touches) => {
       const dx = touches[0].clientX - touches[1].clientX;
       const dy = touches[0].clientY - touches[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
-    }
+    };
 
     canvas.addEventListener('touchstart', (e) => {
       if (!baseImage) return;
@@ -218,6 +218,8 @@
       draw();
     });
 
+    uploadImageBtn.addEventListener('click', () => imageInput.click());
+
     imageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -229,9 +231,8 @@
         offsetX = 0;
         offsetY = 0;
         draw();
+        uploadImageBtn.style.display = 'none';
         actions.style.display = 'flex';
-        imageInput.style.display = 'none';
-        buttonText.style.display = 'none';
         downloadBtn.style.display = 'inline-block';
         resetBtn.style.display = 'none';
         twibbonInputBtn.style.display = 'inline-block';
@@ -240,7 +241,6 @@
     });
 
     twibbonInputBtn.addEventListener('click', () => {
-      if (!baseImage) return;
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -260,13 +260,13 @@
     downloadBtn.addEventListener('click', () => {
       overlay.style.display = 'flex';
       spinner.style.display = 'block';
-      let countdown = 15;
-      countdownEl.textContent = countdown;
-      const interval = setInterval(() => {
-        countdown--;
-        countdownEl.textContent = countdown;
-        if (countdown <= 0) {
-          clearInterval(interval);
+      let seconds = 15;
+      countdown.textContent = seconds;
+      const timer = setInterval(() => {
+        seconds--;
+        countdown.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(timer);
           overlay.style.display = 'none';
           spinner.style.display = 'none';
           const link = document.createElement('a');
@@ -285,13 +285,18 @@
 
     resetBtn.addEventListener('click', () => {
       baseImage = null;
+      overlayImage = null;
       overlayLoaded = false;
-      overlayImage.src = "";
       scale = 1;
-      offsetX = offsetY = 0;
+      lastScale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      lastX = 0;
+      lastY = 0;
+      isDragging = false;
+      interactionOngoing = false;
       imageInput.value = '';
-      imageInput.style.display = 'block';
-      buttonText.style.display = 'block';
+      uploadImageBtn.style.display = 'block';
       actions.style.display = 'none';
       downloadNote.style.display = 'none';
       draw();
@@ -303,28 +308,23 @@
         return;
       }
       canvas.toBlob(async (blob) => {
+        if (!blob) return alert('Gagal menyiapkan gambar.');
         const file = new File([blob], 'twibbon.png', { type: 'image/png' });
-        const shareData = {
-          title: 'Twibbon Saya',
-          text: 'Lihat hasil twibbon saya!',
-          files: [file]
-        };
+        const shareData = { title: 'Twibbon Saya', text: 'Lihat hasil twibbon saya!', files: [file] };
         try {
-          if (navigator.canShare(shareData)) {
+          if (navigator.canShare && navigator.canShare(shareData)) {
             await navigator.share(shareData);
           } else {
             alert('Perangkat ini tidak mendukung berbagi file.');
           }
         } catch (err) {
-          alert('Gagal membagikan gambar.');
+          console.error('Gagal membagikan:', err);
         }
-      });
+      }, 'image/png');
     });
 
-    // Gambar twibbon default (hanya dimuat setelah unggah gambar)
-    window.addEventListener('load', () => {
-      draw();
-    });
+    // Initial draw with placeholder twibbon if needed
+    draw();
   </script>
 </body>
 </html>
