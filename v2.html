@@ -4,127 +4,145 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Alat Twibbon</title>
+  <link rel="stylesheet" href="#" />
   <style>
     body {
-      margin: 0;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f0f0f0;
-      flex-direction: column;
-    }
-    .container {
-      position: relative;
-      width: 300px;
-      height: 300px;
-      touch-action: none;
-    }
-    canvas {
-      width: 100%;
-      height: 100%;
-      background-color: #ccc;
-      display: block;
-      border-radius: 10px;
-      touch-action: none;
-    }
-    #imageInput {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      width: 200px;
-      height: 50px;
-      opacity: 0;
-      cursor: pointer;
-    }
-    .button-placeholder {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      background-color: rgba(0, 123, 255, 0.0);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      text-align: center;
-      z-index: 5;
-      pointer-events: none;
-      font-size: clamp(14px, 4vw, 18px);
-      font-weight: bold;
-    }
-    .action-buttons {
-      margin-top: 20px;
-      display: none;
-      gap: 10px;
-    }
-    .action-buttons button {
-      padding: 10px 20px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    #shareBtn {
-      background-color: #007BFF;
-      display: none;
-    }
-    #resetBtn {
-      background-color: #dc3545;
-      display: none;
-    }
-    #twibbonInputBtn {
-      background-color: #ffc107;
-      display: none;
-    }
-    #spinner {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      width: 30px;
-      height: 30px;
-      border: 4px solid #fff;
-      border-top: 4px solid #333;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      display: none;
-      z-index: 20;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    #processingOverlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(200, 200, 200, 0.8);
-      color: #333;
-      font-size: 18px;
-      font-weight: bold;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 15;
-      display: none;
-    }
-    #downloadNote {
-      margin-top: 10px;
-      font-size: 14px;
-      display: none;
-      color: #333;
-    }
+  margin: 0;
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background: #f0f0f0;
+  height: 100vh;
+}
+
+.container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  touch-action: none;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  background-color: #ccc;
+  display: block;
+  border-radius: 10px;
+  touch-action: none;
+}
+
+#imageInput {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  width: 200px;
+  height: 50px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.button-placeholder {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 123, 255, 0.0); /* transparan */
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 5;
+  pointer-events: none;
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: bold;
+}
+
+.action-buttons {
+  margin-top: 20px;
+  display: none;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-buttons button {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#shareBtn {
+  background-color: #007BFF;
+  display: none;
+}
+
+#resetBtn {
+  background-color: #dc3545;
+  display: none;
+}
+
+#twibbonInputBtn {
+  background-color: #ffc107;
+  display: none;
+}
+
+#spinner {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border: 4px solid #fff;
+  border-top: 4px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: none;
+  z-index: 20;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#processingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(200, 200, 200, 0.8);
+  color: #333;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 15;
+  display: none;
+}
+
+#downloadNote {
+  margin-top: 10px;
+  font-size: 14px;
+  display: none;
+  color: #333;
+}
+
   </style>
 </head>
 <body>
   <div class="container">
     <canvas id="twibbonCanvas" width="300" height="300"></canvas>
-    <div id="processingOverlay">Sedang proses... <span id="countdown">15</span></div>
+    <div id="processingOverlay">Sedang proses... <span id="countdown">15</span> detik</div>
     <div id="spinner"></div>
     <input type="file" accept="image/*" id="imageInput" />
     <div class="button-placeholder" id="buttonText">UNGGAH GAMBAR</div>
@@ -137,7 +155,9 @@
     <button id="twibbonInputBtn">Unggah Twibbon</button>
   </div>
 
-  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#">klik di sini</a>.</div>
+  <div id="downloadNote">
+    Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#" download="twibbon.png">klik di sini</a>.
+  </div>
 
   <script>
     const canvas = document.getElementById('twibbonCanvas');
@@ -367,6 +387,7 @@ shareBtn.addEventListener('click', async () => {
     }
   }, 'image/png');
 });
+
   </script>
 </body>
 </html>
