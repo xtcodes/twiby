@@ -366,7 +366,10 @@ shareBtn.addEventListener('click', async () => {
   }
 });
 
-drawCanvas();
+placeholderImage.onload = () => {
+  drawCanvas();
+};
+
 
   </script>
 </body>
