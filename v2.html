@@ -162,8 +162,6 @@ canvas {
   </div>
 
   <script>
-  // Versi final script.js - Ukuran foto pengguna asli dan proporsional dipertahankan
-
 const canvas = document.getElementById('twibbonCanvas');
 const ctx = canvas.getContext('2d');
 const imageInput = document.getElementById('imageInput');
@@ -181,7 +179,6 @@ const actions = document.getElementById('actions');
 
 let userImage = null;
 let twibbonImage = null;
-let twibbonReady = false;
 let isDragging = false;
 let lastTouchDist = null;
 let offsetX = 0;
@@ -190,12 +187,16 @@ let scale = 1;
 let startX, startY;
 
 const placeholderImage = new Image();
-placeholderImage.src = 'https://picsum.photos/300/300';
+placeholderImage.src =
+  'https://picsum.photos/300/300';
 
 const defaultTwibbon = new Image();
 defaultTwibbon.src = 'twibbon.png';
 defaultTwibbon.onload = () => {
   twibbonImage = defaultTwibbon;
+};
+
+placeholderImage.onload = () => {
   drawCanvas();
 };
 
@@ -203,9 +204,15 @@ function drawCanvas(isInteracting = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (userImage) {
-    const imgWidth = userImage.naturalWidth * scale;
-    const imgHeight = userImage.naturalHeight * scale;
-    ctx.drawImage(userImage, offsetX, offsetY, imgWidth, imgHeight);
+    const aspectRatio = userImage.width / userImage.height;
+    let drawWidth = userImage.width * scale;
+    let drawHeight = userImage.height * scale;
+
+    // Batasi ukuran maksimal agar tidak keluar canvas
+    if (drawWidth > canvas.width * 3) drawWidth = canvas.width * 3;
+    if (drawHeight > canvas.height * 3) drawHeight = canvas.height * 3;
+
+    ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
   } else {
     ctx.drawImage(placeholderImage, 0, 0, canvas.width, canvas.height);
   }
@@ -358,18 +365,15 @@ shareBtn.addEventListener('click', async () => {
         text: 'Lihat hasil Twibbon saya!',
       });
     } else {
-      alert('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
+      alert(
+        'Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.'
+      );
     }
   } catch (error) {
     console.error('Gagal membagikan:', error);
     alert('Terjadi kesalahan saat membagikan gambar.');
   }
 });
-
-placeholderImage.onload = () => {
-  drawCanvas();
-};
-
 
   </script>
 </body>
