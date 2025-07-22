@@ -341,22 +341,26 @@ resetBtn.addEventListener('click', () => {
 });
 
 shareBtn.addEventListener('click', async () => {
-  if (navigator.canShare && navigator.canShare({ files: [] })) {
-    const blob = await new Promise(resolve =>
+  try {
+    const blob = await new Promise((resolve) =>
       canvas.toBlob(resolve, 'image/png')
     );
     const file = new File([blob], 'twibbon.png', { type: 'image/png' });
-    try {
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         files: [file],
         title: 'Twibbon Saya',
-        text: 'Lihat hasil Twibbon saya!'
+        text: 'Lihat hasil Twibbon saya!',
       });
-    } catch (err) {
-      alert('Gagal membagikan gambar.');
+    } else {
+      alert(
+        'Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.'
+      );
     }
-  } else {
-    alert('Fitur bagikan tidak didukung di perangkat ini.');
+  } catch (error) {
+    console.error('Gagal membagikan:', error);
+    alert('Terjadi kesalahan saat membagikan gambar.');
   }
 });
 
