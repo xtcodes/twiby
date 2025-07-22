@@ -107,15 +107,10 @@
       color: #333;
       font-size: 18px;
       font-weight: bold;
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 15;
-      display: none;
-    }
-    #countdownText {
-      margin-left: 8px;
-      font-weight: bold;
     }
     #downloadNote {
       margin-top: 10px;
@@ -128,7 +123,7 @@
 <body>
   <div class="container">
     <canvas id="twibbonCanvas" width="300" height="300"></canvas>
-    <div id="processingOverlay">Sedang proses... <span id="countdownText">15</span> detik</div>
+    <div id="processingOverlay">Sedang proses... (<span id="countdown">15</span>)</div>
     <div id="spinner"></div>
     <input type="file" accept="image/*" id="imageInput" />
     <div class="button-placeholder" id="buttonText">UNGGAH GAMBAR</div>
@@ -141,7 +136,7 @@
     <button id="twibbonInputBtn">Unggah Twibbon</button>
   </div>
 
-  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#" download>klik di sini</a>.</div>
+  <div id="downloadNote">Jika unduhan tidak dimulai otomatis, <a id="manualDownload" href="#">klik di sini</a>.</div>
 
   <script>
     const canvas = document.getElementById('twibbonCanvas');
@@ -155,18 +150,14 @@
     const twibbonInputBtn = document.getElementById('twibbonInputBtn');
     const spinner = document.getElementById('spinner');
     const overlay = document.getElementById('processingOverlay');
+    const countdown = document.getElementById('countdown');
     const downloadNote = document.getElementById('downloadNote');
     const manualDownload = document.getElementById('manualDownload');
-    const countdownText = document.getElementById('countdownText');
 
     let baseImage = null;
-    const placeholderImage = new Image();
-    placeholderImage.src = 'https://via.placeholder.com/300x300?text=Placeholder';
-
     let overlayImage = new Image();
-    overlayImage.src = 'twibbon.png';
     let overlayLoaded = false;
-    overlayImage.onload = () => { overlayLoaded = true; draw(); };
+    let twibbonVisible = false;
 
     let scale = 1;
     let lastScale = 1;
@@ -180,9 +171,8 @@
     let baseImageWidth = 0;
     let baseImageHeight = 0;
 
-    function draw() {
+    const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (baseImage) {
         ctx.save();
         ctx.translate(offsetX, offsetY);
@@ -192,22 +182,24 @@
         const drawHeight = baseImageHeight * ratio;
         ctx.drawImage(baseImage, 0, 0, drawWidth, drawHeight);
         ctx.restore();
+
+        if (overlayLoaded && twibbonVisible) {
+          ctx.globalAlpha = interactionOngoing ? 0.5 : 1.0;
+          ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1.0;
+        }
       } else {
-        ctx.drawImage(placeholderImage, 0, 0, canvas.width, canvas.height);
+        const placeholder = new Image();
+        placeholder.onload = () => ctx.drawImage(placeholder, 0, 0, canvas.width, canvas.height);
+        placeholder.src = 'https://via.placeholder.com/300x300.png?text=Canvas+Kosong';
       }
+    };
 
-      if (overlayLoaded) {
-        ctx.globalAlpha = interactionOngoing ? 0.5 : 1.0;
-        ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1.0;
-      }
-    }
-
-    function getTouchDistance(touches) {
+    const getTouchDistance = (touches) => {
       const dx = touches[0].clientX - touches[1].clientX;
       const dy = touches[0].clientY - touches[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
-    }
+    };
 
     canvas.addEventListener('touchstart', (e) => {
       if (!baseImage) return;
@@ -256,7 +248,12 @@
         scale = 1;
         offsetX = 0;
         offsetY = 0;
-        draw();
+        overlayImage.src = 'twibbon.png';
+        overlayImage.onload = () => {
+          overlayLoaded = true;
+          twibbonVisible = true;
+          draw();
+        };
         imageInput.style.display = 'none';
         buttonText.style.display = 'none';
         actions.style.display = 'flex';
@@ -270,14 +267,14 @@
     downloadBtn.addEventListener('click', () => {
       overlay.style.display = 'flex';
       spinner.style.display = 'block';
-      let countdown = 15;
-      countdownText.textContent = countdown;
 
-      const timer = setInterval(() => {
-        countdown--;
-        countdownText.textContent = countdown;
-        if (countdown <= 0) {
-          clearInterval(timer);
+      let count = 15;
+      countdown.textContent = count;
+      const interval = setInterval(() => {
+        count--;
+        countdown.textContent = count;
+        if (count <= 0) {
+          clearInterval(interval);
           overlay.style.display = 'none';
           spinner.style.display = 'none';
 
@@ -299,6 +296,7 @@
 
     resetBtn.addEventListener('click', () => {
       baseImage = null;
+      twibbonVisible = false;
       scale = 1;
       lastScale = 1;
       offsetX = 0;
@@ -345,6 +343,9 @@
         }
       }, 'image/png');
     });
+
+    // Awal gambar canvas
+    draw();
   </script>
 </body>
 </html>
