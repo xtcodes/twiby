@@ -22,7 +22,7 @@ let offsetY = 0;
 let scale = 1;
 let startX, startY;
 
-// Placeholder
+// Placeholder SVG
 const placeholderImage = new Image();
 placeholderImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
 
@@ -34,21 +34,13 @@ defaultTwibbon.onload = () => {
   drawCanvas();
 };
 
-// Draw canvas (opsi showWatermark)
-function drawCanvas(isInteracting = false, showWatermark = false) {
+function drawCanvas(isInteracting = false, withWatermark = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (userImage) {
     const aspectRatio = userImage.width / userImage.height;
     let drawWidth = userImage.width * scale;
     let drawHeight = userImage.height * scale;
-
-    // Hindari distorsi membesar di awal
-    if (scale === 1 && (drawWidth > canvas.width || drawHeight > canvas.height)) {
-      const ratio = Math.min(canvas.width / drawWidth, canvas.height / drawHeight);
-      drawWidth *= ratio;
-      drawHeight *= ratio;
-    }
 
     ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
   } else {
@@ -61,16 +53,14 @@ function drawCanvas(isInteracting = false, showWatermark = false) {
     ctx.globalAlpha = 1.0;
   }
 
-  // Watermark saat dibutuhkan
-  if (showWatermark) {
-    ctx.font = '16px sans-serif';
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'right';
-    ctx.fillText('#VERDONK', canvas.width - 10, canvas.height - 10);
+  if (withWatermark) {
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "right";
+    ctx.fillText("XTCODES", canvas.width - 10, canvas.height - 10);
   }
 }
 
-// Gesture
 canvas.addEventListener('touchstart', (e) => {
   if (e.touches.length === 1) {
     isDragging = true;
@@ -110,7 +100,6 @@ function getTouchDistance(touches) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Upload user image
 imageInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -135,7 +124,6 @@ imageInput.addEventListener('change', (e) => {
   reader.readAsDataURL(file);
 });
 
-// Upload custom twibbon
 twibbonInputBtn.addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
@@ -143,7 +131,6 @@ twibbonInputBtn.addEventListener('click', () => {
   input.onchange = function (e) {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = function (event) {
       const img = new Image();
@@ -155,6 +142,7 @@ twibbonInputBtn.addEventListener('click', () => {
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.drawImage(img, 0, 0);
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
+
         let hasTransparency = false;
         for (let i = 3; i < imgData.length; i += 4) {
           if (imgData[i] < 255) {
@@ -162,8 +150,9 @@ twibbonInputBtn.addEventListener('click', () => {
             break;
           }
         }
+
         if (!hasTransparency) {
-          alert('Twibbon harus memiliki ruang transparan (format PNG transparan).');
+          alert("Twibbon harus memiliki ruang transparan (format PNG transparan).");
           return;
         }
 
@@ -177,7 +166,6 @@ twibbonInputBtn.addEventListener('click', () => {
   input.click();
 });
 
-// Download
 downloadBtn.addEventListener('click', () => {
   processingOverlay.style.display = 'flex';
   spinner.style.display = 'block';
@@ -192,6 +180,7 @@ downloadBtn.addEventListener('click', () => {
       processingOverlay.style.display = 'none';
 
       drawCanvas(false, true); // Tampilkan watermark
+
       const dataURL = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = 'twibbon.png';
@@ -205,11 +194,14 @@ downloadBtn.addEventListener('click', () => {
       resetBtn.style.display = 'inline-block';
       downloadBtn.style.display = 'none';
       twibbonInputBtn.style.display = 'none';
+
+      setTimeout(() => {
+        drawCanvas(); // Hapus watermark
+      }, 100);
     }
   }, 1000);
 });
 
-// Reset
 resetBtn.addEventListener('click', () => {
   userImage = null;
   offsetX = 0;
@@ -225,11 +217,8 @@ resetBtn.addEventListener('click', () => {
   drawCanvas();
 });
 
-// Share
 shareBtn.addEventListener('click', async () => {
   drawCanvas(false, true);
-  await new Promise(resolve => setTimeout(resolve, 100));
-
   try {
     const blob = await new Promise((resolve) =>
       canvas.toBlob(resolve, 'image/png')
@@ -249,7 +238,9 @@ shareBtn.addEventListener('click', async () => {
     console.error('Gagal membagikan:', error);
     alert('Terjadi kesalahan saat membagikan gambar.');
   } finally {
-    drawCanvas(); // Hapus watermark setelah selesai
+    setTimeout(() => {
+      drawCanvas(); // Hapus watermark
+    }, 100);
   }
 });
 
