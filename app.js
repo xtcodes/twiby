@@ -15,7 +15,6 @@ const actions = document.getElementById('actions');
 
 let userImage = null;
 let twibbonImage = null;
-let twibbonReady = false;
 let isDragging = false;
 let lastTouchDist = null;
 let offsetX = 0;
@@ -35,13 +34,19 @@ defaultTwibbon.onload = () => {
   drawCanvas();
 };
 
-function drawCanvas(isInteracting = false, withWatermark = false) {
+function drawCanvas(isInteracting = false, showWatermark = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (userImage) {
     const aspectRatio = userImage.width / userImage.height;
     let drawWidth = userImage.width * scale;
     let drawHeight = userImage.height * scale;
+
+    if (drawWidth > canvas.width || drawHeight > canvas.height) {
+      const ratio = Math.min(canvas.width / drawWidth, canvas.height / drawHeight);
+      drawWidth *= ratio;
+      drawHeight *= ratio;
+    }
 
     ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
   } else {
@@ -54,9 +59,9 @@ function drawCanvas(isInteracting = false, withWatermark = false) {
     ctx.globalAlpha = 1.0;
   }
 
-  if (withWatermark && userImage) {
+  if (showWatermark) {
+    ctx.font = 'bold 16px sans-serif';
     ctx.fillStyle = 'white';
-    ctx.font = '16px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText('#XTCODES', canvas.width - 10, canvas.height - 10);
   }
@@ -119,6 +124,7 @@ imageInput.addEventListener('change', (e) => {
       twibbonInputBtn.style.display = 'inline-block';
       imageInput.style.display = 'none';
       buttonText.style.display = 'none';
+      drawCanvas();
     };
     img.src = event.target.result;
   };
@@ -128,22 +134,21 @@ imageInput.addEventListener('change', (e) => {
 twibbonInputBtn.addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/png';
+  input.accept = 'image/*';
   input.onchange = function (e) {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = function (event) {
       const img = new Image();
       img.onload = function () {
-        // Validasi: twibbon harus memiliki area transparan
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = img.width;
-        tempCanvas.height = img.height;
-        tempCtx.drawImage(img, 0, 0);
-        const imageData = tempCtx.getImageData(0, 0, img.width, img.height).data;
+        // Validasi ruang transparan
+        const canvasTest = document.createElement('canvas');
+        canvasTest.width = img.width;
+        canvasTest.height = img.height;
+        const ctxTest = canvasTest.getContext('2d');
+        ctxTest.drawImage(img, 0, 0);
+        const imageData = ctxTest.getImageData(0, 0, img.width, img.height).data;
 
         let hasTransparency = false;
         for (let i = 3; i < imageData.length; i += 4) {
@@ -154,7 +159,7 @@ twibbonInputBtn.addEventListener('click', () => {
         }
 
         if (!hasTransparency) {
-          alert('Twibbon harus memiliki latar transparan (.png transparan).');
+          alert("Twibbon harus memiliki ruang transparan (format PNG transparan).");
           return;
         }
 
@@ -181,9 +186,7 @@ downloadBtn.addEventListener('click', () => {
       spinner.style.display = 'none';
       processingOverlay.style.display = 'none';
 
-      // Gambar ulang dengan watermark
-      drawCanvas(false, true);
-
+      drawCanvas(false, true); // Dengan watermark
       const dataURL = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = 'twibbon.png';
@@ -198,8 +201,7 @@ downloadBtn.addEventListener('click', () => {
       downloadBtn.style.display = 'none';
       twibbonInputBtn.style.display = 'none';
 
-      // Gambar ulang tanpa watermark
-      drawCanvas();
+      drawCanvas(); // Kembali tanpa watermark
     }
   }, 1000);
 });
@@ -220,8 +222,7 @@ resetBtn.addEventListener('click', () => {
 });
 
 shareBtn.addEventListener('click', async () => {
-  // Gambar ulang dengan watermark
-  drawCanvas(false, true);
+  drawCanvas(false, true); // Gambar dengan watermark
 
   try {
     const blob = await new Promise((resolve) =>
@@ -241,11 +242,10 @@ shareBtn.addEventListener('click', async () => {
   } catch (error) {
     console.error('Gagal membagikan:', error);
     alert('Terjadi kesalahan saat membagikan gambar.');
+  } finally {
+    drawCanvas(); // Kembali tanpa watermark
   }
-
-  // Gambar ulang tanpa watermark
-  drawCanvas();
 });
 
-// Gambar awal
+// Inisialisasi canvas awal
 drawCanvas();
