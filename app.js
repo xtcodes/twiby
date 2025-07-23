@@ -218,10 +218,31 @@ resetBtn.addEventListener('click', () => {
 });
 
 shareBtn.addEventListener('click', async () => {
-  drawCanvas(false, true);
   try {
+    // Buat canvas sementara tanpa mengganggu canvas utama
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Gambar ulang semua komponen di canvas sementara
+    if (userImage) {
+      const aspectRatio = userImage.width / userImage.height;
+      let drawWidth = userImage.width * scale;
+      let drawHeight = userImage.height * scale;
+      tempCtx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
+    } else {
+      tempCtx.drawImage(placeholderImage, 0, 0, tempCanvas.width, tempCanvas.height);
+    }
+
+    if (twibbonImage && userImage) {
+      tempCtx.drawImage(twibbonImage, 0, 0, tempCanvas.width, tempCanvas.height);
+    }
+
+    // Tidak menambahkan watermark saat share
+
     const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, 'image/png')
+      tempCanvas.toBlob(resolve, 'image/png')
     );
     const file = new File([blob], 'twibbon.png', { type: 'image/png' });
 
@@ -237,10 +258,6 @@ shareBtn.addEventListener('click', async () => {
   } catch (error) {
     console.error('Gagal membagikan:', error);
     alert('Terjadi kesalahan saat membagikan gambar.');
-  } finally {
-    setTimeout(() => {
-      drawCanvas(); // Hapus watermark
-    }, 100);
   }
 });
 
