@@ -150,7 +150,7 @@ twibbonInputBtn.addEventListener('click', () => {
         }
 
         if (!hasTransparency) {
-          alert("Twibbon harus memiliki latar belakang transparan.");
+          alert("Twibbon harus memiliki latar belakang transparan (.png dengan alpha).");
           return;
         }
 
