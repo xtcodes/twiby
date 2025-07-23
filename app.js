@@ -15,7 +15,7 @@ const actions = document.getElementById('actions');
 
 let userImage = null;
 let twibbonImage = null;
-let twibbonReady = false;
+let defaultTwibbon = new Image();
 let isDragging = false;
 let lastTouchDist = null;
 let offsetX = 0;
@@ -23,16 +23,10 @@ let offsetY = 0;
 let scale = 1;
 let startX, startY;
 
-// Placeholder SVG
 const placeholderImage = new Image();
 placeholderImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
 
-const defaultTwibbon = new Image();
 defaultTwibbon.src = 'twibbon.png';
-defaultTwibbon.onload = () => {
-  twibbonImage = null; // Jangan tampilkan sebelum gambar pengguna diunggah
-  drawCanvas();
-};
 
 function drawCanvas(isInteracting = false, withWatermark = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -110,16 +104,18 @@ imageInput.addEventListener('change', (e) => {
       offsetX = 0;
       offsetY = 0;
       scale = 1;
+
+      // Load twibbon default only when userImage is ready
+      if (!twibbonImage) {
+        twibbonImage = defaultTwibbon;
+      }
+
       drawCanvas();
       actions.style.display = 'flex';
       downloadBtn.style.display = 'inline-block';
       twibbonInputBtn.style.display = 'inline-block';
       imageInput.style.display = 'none';
       buttonText.style.display = 'none';
-
-      if (!twibbonImage) {
-        twibbonImage = defaultTwibbon;
-      }
     };
     img.src = event.target.result;
   };
@@ -154,7 +150,7 @@ twibbonInputBtn.addEventListener('click', () => {
         }
 
         if (!hasTransparency) {
-          alert("Twibbon harus memiliki latar belakang transparan (.png dengan alpha).");
+          alert("Twibbon harus memiliki latar belakang transparan.");
           return;
         }
 
@@ -185,6 +181,7 @@ downloadBtn.addEventListener('click', () => {
 
       drawCanvas(false, true); // with watermark
       const dataURL = canvas.toDataURL('image/png');
+
       const link = document.createElement('a');
       link.download = 'twibbon.png';
       link.href = dataURL;
@@ -192,8 +189,8 @@ downloadBtn.addEventListener('click', () => {
 
       manualDownload.href = dataURL;
       downloadNote.style.display = 'block';
-      drawCanvas(); // restore without watermark
 
+      drawCanvas(); // redraw without watermark
       shareBtn.style.display = 'inline-block';
       resetBtn.style.display = 'inline-block';
       downloadBtn.style.display = 'none';
@@ -208,7 +205,7 @@ shareBtn.addEventListener('click', async () => {
     const blob = await new Promise((resolve) =>
       canvas.toBlob(resolve, 'image/png')
     );
-    drawCanvas(); // restore
+    drawCanvas(); // restore canvas
 
     const file = new File([blob], 'twibbon.png', { type: 'image/png' });
 
