@@ -63,7 +63,7 @@ function drawCanvas(isInteracting = false, showWatermark = false) {
     ctx.font = 'bold 16px sans-serif';
     ctx.fillStyle = 'white';
     ctx.textAlign = 'right';
-    ctx.fillText('#XTCODES', canvas.width - 10, canvas.height - 10);
+    ctx.fillText('#JAKARTA', canvas.width - 10, canvas.height - 10);
   }
 }
 
