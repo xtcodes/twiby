@@ -15,7 +15,6 @@ const actions = document.getElementById('actions');
 
 let userImage = null;
 let twibbonImage = null;
-let twibbonReady = false;
 let isDragging = false;
 let lastTouchDist = null;
 let offsetX = 0;
@@ -33,23 +32,7 @@ defaultTwibbon.onload = () => {
   drawCanvas();
 };
 
-function hasTransparency(image, callback) {
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = image.width;
-  tempCanvas.height = image.height;
-  const tempCtx = tempCanvas.getContext('2d');
-  tempCtx.drawImage(image, 0, 0);
-  const imageData = tempCtx.getImageData(0, 0, image.width, image.height).data;
-  for (let i = 3; i < imageData.length; i += 4) {
-    if (imageData[i] < 255) {
-      callback(true);
-      return;
-    }
-  }
-  callback(false);
-}
-
-function drawCanvas(isInteracting = false, withWatermark = false) {
+function drawCanvas(isInteracting = false, includeWatermark = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (userImage) {
@@ -63,14 +46,14 @@ function drawCanvas(isInteracting = false, withWatermark = false) {
   if (twibbonImage && userImage) {
     ctx.globalAlpha = isInteracting ? 0.5 : 1;
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0;
   }
 
-  if (withWatermark) {
+  if (includeWatermark) {
     ctx.fillStyle = 'white';
     ctx.font = '16px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('© TwibbonKu', canvas.width - 10, canvas.height - 10);
+    ctx.fillText('twibbonku.id', canvas.width - 10, canvas.height - 10);
   }
 }
 
@@ -116,6 +99,7 @@ function getTouchDistance(touches) {
 imageInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = function (event) {
     const img = new Image();
@@ -147,14 +131,29 @@ twibbonInputBtn.addEventListener('click', () => {
     reader.onload = function (event) {
       const img = new Image();
       img.onload = function () {
-        hasTransparency(img, (hasAlpha) => {
-          if (!hasAlpha) {
-            alert('Twibbon harus memiliki ruang transparan (format PNG dengan alpha).');
-            return;
+        // Validasi transparansi
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(img, 0, 0);
+        const imageData = tempCtx.getImageData(0, 0, img.width, img.height).data;
+
+        let hasTransparent = false;
+        for (let i = 3; i < imageData.length; i += 4) {
+          if (imageData[i] < 255) {
+            hasTransparent = true;
+            break;
           }
-          twibbonImage = img;
-          drawCanvas();
-        });
+        }
+
+        if (!hasTransparent) {
+          alert('Twibbon harus memiliki latar transparan (PNG dengan alpha).');
+          return;
+        }
+
+        twibbonImage = img;
+        drawCanvas();
       };
       img.src = event.target.result;
     };
@@ -177,22 +176,22 @@ downloadBtn.addEventListener('click', () => {
       processingOverlay.style.display = 'none';
 
       drawCanvas(false, true);
-      setTimeout(() => {
-        const dataURL = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = 'twibbon.png';
-        link.href = dataURL;
-        link.click();
+      const dataURL = canvas.toDataURL('image/png');
 
-        manualDownload.href = dataURL;
-        downloadNote.style.display = 'block';
+      const link = document.createElement('a');
+      link.download = 'twibbon.png';
+      link.href = dataURL;
+      link.click();
 
-        shareBtn.style.display = 'inline-block';
-        resetBtn.style.display = 'inline-block';
-        downloadBtn.style.display = 'none';
-        twibbonInputBtn.style.display = 'none';
-        drawCanvas();
-      }, 100);
+      manualDownload.href = dataURL;
+      downloadNote.style.display = 'block';
+
+      shareBtn.style.display = 'inline-block';
+      resetBtn.style.display = 'inline-block';
+      downloadBtn.style.display = 'none';
+      twibbonInputBtn.style.display = 'none';
+
+      drawCanvas(); // hapus watermark dari canvas utama
     }
   }, 1000);
 });
@@ -214,7 +213,15 @@ resetBtn.addEventListener('click', () => {
 
 shareBtn.addEventListener('click', async () => {
   try {
+    // Simpan tampilan sebelum diberi watermark
+    const originalCanvas = document.createElement('canvas');
+    originalCanvas.width = canvas.width;
+    originalCanvas.height = canvas.height;
+    const originalCtx = originalCanvas.getContext('2d');
+    originalCtx.drawImage(canvas, 0, 0);
+
     drawCanvas(false, true);
+
     const blob = await new Promise((resolve) =>
       canvas.toBlob(resolve, 'image/png')
     );
@@ -229,10 +236,14 @@ shareBtn.addEventListener('click', async () => {
     } else {
       alert('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
     }
-    drawCanvas(); // Hapus watermark dari tampilan setelah berbagi
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(originalCanvas, 0, 0);
   } catch (error) {
     console.error('Gagal membagikan:', error);
     alert('Terjadi kesalahan saat membagikan gambar.');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(originalCanvas, 0, 0);
   }
 });
 
