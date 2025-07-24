@@ -53,7 +53,7 @@ function drawCanvas(isInteracting = false, includeWatermark = false) {
     ctx.fillStyle = 'white';
     ctx.font = '16px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('twibbonku.id', canvas.width - 10, canvas.height - 10);
+    ctx.fillText('#JAKATE', canvas.width - 10, canvas.height - 10);
   }
 }
 
