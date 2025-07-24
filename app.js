@@ -22,12 +22,9 @@ let offsetY = 0;
 let scale = 1;
 let startX, startY;
 
-let showWatermark = false;
-
 // Placeholder SVG
 const placeholderImage = new Image();
-placeholderImage.src =
-  'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
+placeholderImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
 
 // Default twibbon
 const defaultTwibbon = new Image();
@@ -37,12 +34,14 @@ defaultTwibbon.onload = () => {
   drawCanvas();
 };
 
-function drawCanvas(isInteracting = false) {
+function drawCanvas(isInteracting = false, withWatermark = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (userImage) {
-    const drawWidth = userImage.width * scale;
-    const drawHeight = userImage.height * scale;
+    const aspectRatio = userImage.width / userImage.height;
+    let drawWidth = userImage.width * scale;
+    let drawHeight = userImage.height * scale;
+
     ctx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
   } else {
     ctx.drawImage(placeholderImage, 0, 0, canvas.width, canvas.height);
@@ -51,14 +50,14 @@ function drawCanvas(isInteracting = false) {
   if (twibbonImage && userImage) {
     ctx.globalAlpha = isInteracting ? 0.5 : 1;
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0;
   }
 
-  if (showWatermark && userImage) {
-    ctx.font = 'bold 16px sans-serif';
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'right';
-    ctx.fillText('TwibbonApp', canvas.width - 10, canvas.height - 10);
+  if (withWatermark) {
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "right";
+    ctx.fillText("© TwibbonKu", canvas.width - 10, canvas.height - 10);
   }
 }
 
@@ -132,29 +131,31 @@ twibbonInputBtn.addEventListener('click', () => {
   input.onchange = function (e) {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = function (event) {
       const img = new Image();
       img.onload = function () {
-        // Validasi apakah ada ruang transparan
+        // Validasi transparansi
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = img.width;
         tempCanvas.height = img.height;
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.drawImage(img, 0, 0);
-        const imageData = tempCtx.getImageData(0, 0, img.width, img.height).data;
+        const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
+
         let hasTransparency = false;
-        for (let i = 3; i < imageData.length; i += 4) {
-          if (imageData[i] < 255) {
+        for (let i = 3; i < imgData.length; i += 4) {
+          if (imgData[i] < 255) {
             hasTransparency = true;
             break;
           }
         }
+
         if (!hasTransparency) {
-          alert('Twibbon harus memiliki latar belakang transparan (PNG transparan).');
+          alert("Twibbon harus memiliki ruang transparan (format PNG transparan).");
           return;
         }
+
         twibbonImage = img;
         drawCanvas();
       };
@@ -170,9 +171,6 @@ downloadBtn.addEventListener('click', () => {
   spinner.style.display = 'block';
   let count = 15;
   countdownEl.textContent = count;
-  showWatermark = true;
-  drawCanvas();
-
   const countdown = setInterval(() => {
     count--;
     countdownEl.textContent = count;
@@ -180,6 +178,8 @@ downloadBtn.addEventListener('click', () => {
       clearInterval(countdown);
       spinner.style.display = 'none';
       processingOverlay.style.display = 'none';
+
+      drawCanvas(false, true); // Tampilkan watermark
 
       const dataURL = canvas.toDataURL('image/png');
       const link = document.createElement('a');
@@ -195,8 +195,9 @@ downloadBtn.addEventListener('click', () => {
       downloadBtn.style.display = 'none';
       twibbonInputBtn.style.display = 'none';
 
-      showWatermark = false;
-      drawCanvas();
+      setTimeout(() => {
+        drawCanvas(); // Hapus watermark
+      }, 100);
     }
   }, 1000);
 });
@@ -217,26 +218,10 @@ resetBtn.addEventListener('click', () => {
 });
 
 shareBtn.addEventListener('click', async () => {
+  drawCanvas(false, true);
   try {
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-
-    if (userImage) {
-      const drawWidth = userImage.width * scale;
-      const drawHeight = userImage.height * scale;
-      tempCtx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
-    } else {
-      tempCtx.drawImage(placeholderImage, 0, 0, tempCanvas.width, tempCanvas.height);
-    }
-
-    if (twibbonImage && userImage) {
-      tempCtx.drawImage(twibbonImage, 0, 0, tempCanvas.width, tempCanvas.height);
-    }
-
     const blob = await new Promise((resolve) =>
-      tempCanvas.toBlob(resolve, 'image/png')
+      canvas.toBlob(resolve, 'image/png')
     );
     const file = new File([blob], 'twibbon.png', { type: 'image/png' });
 
@@ -252,8 +237,12 @@ shareBtn.addEventListener('click', async () => {
   } catch (error) {
     console.error('Gagal membagikan:', error);
     alert('Terjadi kesalahan saat membagikan gambar.');
+  } finally {
+    setTimeout(() => {
+      drawCanvas(); // Hapus watermark
+    }, 100);
   }
 });
 
-// Inisialisasi awal
+// Gambar awal
 drawCanvas();
