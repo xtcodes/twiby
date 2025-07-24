@@ -214,16 +214,7 @@ resetBtn.addEventListener('click', () => {
 
 shareBtn.addEventListener('click', async () => {
   try {
-    // Simpan tampilan canvas sebelum diberi watermark
-    const originalCanvas = document.createElement('canvas');
-    originalCanvas.width = canvas.width;
-    originalCanvas.height = canvas.height;
-    const originalCtx = originalCanvas.getContext('2d');
-    originalCtx.drawImage(canvas, 0, 0);
-
-    // Tampilkan watermark hanya di hasil share
     drawCanvas(false, true);
-
     const blob = await new Promise((resolve) =>
       canvas.toBlob(resolve, 'image/png')
     );
@@ -238,17 +229,10 @@ shareBtn.addEventListener('click', async () => {
     } else {
       alert('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
     }
-
-    // Pulihkan canvas ke versi tanpa watermark
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(originalCanvas, 0, 0);
+    drawCanvas(); // Hapus watermark dari tampilan setelah berbagi
   } catch (error) {
     console.error('Gagal membagikan:', error);
     alert('Terjadi kesalahan saat membagikan gambar.');
-
-    // Pastikan canvas tetap dipulihkan meski gagal
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(originalCanvas, 0, 0);
   }
 });
 
