@@ -2,6 +2,7 @@ const canvas = document.getElementById('twibbonCanvas');
 const ctx = canvas.getContext('2d');
 const imageInput = document.getElementById('imageInput');
 const downloadBtn = document.getElementById('downloadBtn');
+const previewBtn = document.getElementById('previewBtn');
 const shareBtn = document.getElementById('shareBtn');
 const resetBtn = document.getElementById('resetBtn');
 const twibbonInputBtn = document.getElementById('twibbonInputBtn');
@@ -12,8 +13,6 @@ const manualDownload = document.getElementById('manualDownload');
 const downloadNote = document.getElementById('downloadNote');
 const buttonText = document.getElementById('buttonText');
 const actions = document.getElementById('actions');
-const previewContainer = document.getElementById('previewContainer');
-const previewImage = document.getElementById('previewImage');
 
 let userImage = null;
 let twibbonImage = null;
@@ -25,8 +24,7 @@ let scale = 1;
 let startX, startY;
 
 const placeholderImage = new Image();
-placeholderImage.src =
-  'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
+placeholderImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
 
 const defaultTwibbon = new Image();
 defaultTwibbon.src = 'twibbon.png';
@@ -107,10 +105,10 @@ imageInput.addEventListener('change', (e) => {
       drawCanvas();
       actions.style.display = 'flex';
       downloadBtn.style.display = 'inline-block';
+      previewBtn.style.display = 'inline-block';
       twibbonInputBtn.style.display = 'inline-block';
       imageInput.style.display = 'none';
       buttonText.style.display = 'none';
-      previewContainer.style.display = 'none';
     };
     img.src = event.target.result;
   };
@@ -129,28 +127,6 @@ twibbonInputBtn.addEventListener('click', () => {
       const img = new Image();
       img.onload = function () {
         twibbonImage = img;
-
-        // Validasi twibbon memiliki area transparan
-        const testCanvas = document.createElement('canvas');
-        const testCtx = testCanvas.getContext('2d');
-        testCanvas.width = img.width;
-        testCanvas.height = img.height;
-        testCtx.drawImage(img, 0, 0);
-        const imageData = testCtx.getImageData(0, 0, img.width, img.height).data;
-
-        let hasTransparency = false;
-        for (let i = 3; i < imageData.length; i += 4) {
-          if (imageData[i] < 255) {
-            hasTransparency = true;
-            break;
-          }
-        }
-
-        if (!hasTransparency) {
-          alert('Twibbon harus memiliki latar transparan (format .png dengan area transparan)');
-          twibbonImage = defaultTwibbon;
-        }
-
         drawCanvas();
       };
       img.src = event.target.result;
@@ -161,39 +137,49 @@ twibbonInputBtn.addEventListener('click', () => {
 });
 
 downloadBtn.addEventListener('click', () => {
-  const previewDataURL = canvas.toDataURL('image/png');
-  previewImage.src = previewDataURL;
-  previewContainer.style.display = 'block';
-
   processingOverlay.style.display = 'flex';
   spinner.style.display = 'block';
-
   let count = 15;
   countdownEl.textContent = count;
   const countdown = setInterval(() => {
     count--;
     countdownEl.textContent = count;
-
     if (count <= 0) {
       clearInterval(countdown);
       spinner.style.display = 'none';
       processingOverlay.style.display = 'none';
 
-      const finalDataURL = canvas.toDataURL('image/png');
+      const dataURL = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = 'twibbon.png';
-      link.href = finalDataURL;
+      link.href = dataURL;
       link.click();
 
-      manualDownload.href = finalDataURL;
+      manualDownload.href = dataURL;
       downloadNote.style.display = 'block';
 
       shareBtn.style.display = 'inline-block';
       resetBtn.style.display = 'inline-block';
       downloadBtn.style.display = 'none';
+      previewBtn.style.display = 'none';
       twibbonInputBtn.style.display = 'none';
     }
   }, 1000);
+});
+
+previewBtn.addEventListener('click', () => {
+  const previewCanvas = document.createElement('canvas');
+  previewCanvas.width = canvas.width;
+  previewCanvas.height = canvas.height;
+  const previewCtx = previewCanvas.getContext('2d');
+
+  if (userImage) {
+    previewCtx.drawImage(userImage, offsetX, offsetY, userImage.width * scale, userImage.height * scale);
+    previewCtx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
+  }
+
+  const previewWindow = window.open('', '_blank');
+  previewWindow.document.write(`<title>Preview Twibbon</title><img src="${previewCanvas.toDataURL('image/png')}">`);
 });
 
 resetBtn.addEventListener('click', () => {
@@ -205,7 +191,6 @@ resetBtn.addEventListener('click', () => {
   downloadNote.style.display = 'none';
   shareBtn.style.display = 'none';
   resetBtn.style.display = 'none';
-  previewContainer.style.display = 'none';
   imageInput.value = '';
   imageInput.style.display = 'block';
   buttonText.style.display = 'block';
@@ -214,7 +199,9 @@ resetBtn.addEventListener('click', () => {
 
 shareBtn.addEventListener('click', async () => {
   try {
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, 'image/png')
+    );
     const file = new File([blob], 'twibbon.png', { type: 'image/png' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -224,7 +211,7 @@ shareBtn.addEventListener('click', async () => {
         text: 'Lihat hasil Twibbon saya!',
       });
     } else {
-      alert('Perangkat tidak mendukung fitur bagikan. Silakan unduh manual.');
+      alert('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
     }
   } catch (error) {
     console.error('Gagal membagikan:', error);
