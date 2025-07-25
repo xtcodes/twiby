@@ -2,50 +2,137 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twibbon Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Twibbon App</title>
   <style>
-    body { font-family: sans-serif; text-align: center; }
-    canvas { width: 100%; border: 1px solid #ccc; touch-action: none; }
-    #actions button { margin: 8px; }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 10px;
+    }
+    #canvasContainer {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 1/1;
+      background: #ccc;
+      margin-bottom: 10px;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      background: white;
+      display: block;
+    }
+    #imageInput {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+    }
+    #buttonText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+    #actions {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #0066ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #999;
+    }
     #processingOverlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
       color: white;
       font-size: 18px;
-      display: none;
       justify-content: center;
       align-items: center;
       flex-direction: column;
       z-index: 999;
     }
-    #spinner { margin-bottom: 12px; }
-    #downloadNote { display: none; margin-top: 10px; color: red; }
+    #spinner {
+      margin-top: 10px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% {transform: rotate(0deg);}
+      100% {transform: rotate(360deg);}
+    }
+    #downloadNote {
+      display: none;
+      font-size: 14px;
+      color: #333;
+      text-align: center;
+      margin-top: 10px;
+    }
+    a {
+      color: #0066ff;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Twibbon Generator</h1>
+  <h1>Twibbon App</h1>
 
-  <input type="file" accept="image/*" id="imageInput" />
-  <p id="buttonText">Unggah gambar untuk mulai</p>
+  <div id="canvasContainer">
+    <canvas id="twibbonCanvas" width="1080" height="1080"></canvas>
+    <input type="file" accept="image/*" id="imageInput" />
+    <div id="buttonText">Unggah Gambar</div>
+  </div>
 
-  <canvas id="twibbonCanvas" width="500" height="500"></canvas>
-
-  <div id="actions" style="display: none;">
+  <div id="actions">
+    <button id="twibbonInputBtn" style="display:none">Ganti Twibbon</button>
     <button id="downloadBtn">Unduh Hasil</button>
-    <button id="previewBtn" style="display:none;">Preview</button>
-    <button id="shareBtn" style="display: none;">Bagikan</button>
-    <button id="resetBtn" style="display: none;">Reset</button>
-    <button id="twibbonInputBtn">Ganti Twibbon</button>
+    <button id="previewBtn" style="display:none">Preview</button>
+    <button id="shareBtn" style="display:none">Bagikan</button>
+    <button id="resetBtn" style="display:none">Reset</button>
   </div>
 
   <div id="processingOverlay">
-    <div id="spinner">⏳ Sedang memproses...</div>
-    <div>Mohon tunggu <span id="countdown">15</span> detik...</div>
+    <div>Mohon tunggu... <span id="countdown">15</span> detik</div>
+    <div id="spinner"></div>
   </div>
 
-  <a id="manualDownload" style="display: none;">Unduh manual</a>
-  <div id="downloadNote">Jika unduhan tidak otomatis, klik tombol di atas.</div>
+  <div id="downloadNote">
+    Jika unduhan tidak dimulai otomatis, <a id="manualDownload" download="twibbon.png" href="#">klik di sini</a>.
+  </div>
 
   <script src="v5.js"></script>
 </body>
