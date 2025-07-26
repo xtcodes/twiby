@@ -208,11 +208,35 @@ downloadBtn.addEventListener('click', () => {
 
 shareBtn.addEventListener('click', async () => {
   try {
-    drawCanvas(false, true);
+    // Buat canvas offscreen untuk menggambar versi dengan watermark
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = canvas.width;
+    exportCanvas.height = canvas.height;
+    const exportCtx = exportCanvas.getContext('2d');
+
+    // Gambar gambar pengguna
+    if (userImage) {
+      const drawWidth = userImage.width * scale;
+      const drawHeight = userImage.height * scale;
+      exportCtx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
+    }
+
+    // Gambar twibbon
+    if (twibbonImage && userImage) {
+      exportCtx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
+    }
+
+    // Tambahkan watermark
+    if (userImage) {
+      exportCtx.font = '16px sans-serif';
+      exportCtx.fillStyle = 'white';
+      exportCtx.textAlign = 'right';
+      exportCtx.fillText('© TwibbonKu', canvas.width - 10, canvas.height - 10);
+    }
+
     const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, 'image/png')
+      exportCanvas.toBlob(resolve, 'image/png')
     );
-    drawCanvas(false, false); // bersihkan watermark dari canvas utama
 
     const file = new File([blob], 'twibbon.png', { type: 'image/png' });
 
