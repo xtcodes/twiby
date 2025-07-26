@@ -2,7 +2,6 @@ const canvas = document.getElementById('twibbonCanvas');
 const ctx = canvas.getContext('2d');
 const imageInput = document.getElementById('imageInput');
 const downloadBtn = document.getElementById('downloadBtn');
-const previewBtn = document.getElementById('previewBtn');
 const shareBtn = document.getElementById('shareBtn');
 const resetBtn = document.getElementById('resetBtn');
 const twibbonInputBtn = document.getElementById('twibbonInputBtn');
@@ -25,17 +24,18 @@ let scale = 1;
 let startX, startY;
 
 const placeholderImage = new Image();
-placeholderImage.src =
-  'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
+placeholderImage.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23ccc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23666">Belum ada gambar</text></svg>';
 
 const defaultTwibbon = new Image();
 defaultTwibbon.src = 'twibbon.png';
 defaultTwibbon.onload = () => {
-  twibbonImage = defaultTwibbon;
-  drawCanvas();
+  validateTransparency(defaultTwibbon, () => {
+    twibbonImage = defaultTwibbon;
+    drawCanvas();
+  });
 };
 
-function drawCanvas(isInteracting = false, showWatermark = false) {
+function drawCanvas(isInteracting = false, withWatermark = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (userImage) {
@@ -49,14 +49,14 @@ function drawCanvas(isInteracting = false, showWatermark = false) {
   if (twibbonImage && userImage) {
     ctx.globalAlpha = isInteracting ? 0.5 : 1;
     ctx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0;
   }
 
-  if (showWatermark) {
-    ctx.font = '32px sans-serif';
+  if (withWatermark && userImage) {
+    ctx.font = '16px sans-serif';
     ctx.fillStyle = 'white';
     ctx.textAlign = 'right';
-    ctx.fillText('© Twibbon App', canvas.width - 20, canvas.height - 20);
+    ctx.fillText('© TwibbonKu', canvas.width - 10, canvas.height - 10);
   }
 }
 
@@ -114,7 +114,6 @@ imageInput.addEventListener('change', (e) => {
       drawCanvas();
       actions.style.display = 'flex';
       downloadBtn.style.display = 'inline-block';
-      previewBtn.style.display = 'inline-block';
       twibbonInputBtn.style.display = 'inline-block';
       imageInput.style.display = 'none';
       buttonText.style.display = 'none';
@@ -131,34 +130,14 @@ twibbonInputBtn.addEventListener('click', () => {
   input.onchange = function (e) {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = function (event) {
       const img = new Image();
       img.onload = function () {
-        // Validasi transparansi
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = img.width;
-        tempCanvas.height = img.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.drawImage(img, 0, 0);
-        const data = tempCtx.getImageData(0, 0, img.width, img.height).data;
-
-        let hasTransparency = false;
-        for (let i = 3; i < data.length; i += 4) {
-          if (data[i] < 255) {
-            hasTransparency = true;
-            break;
-          }
-        }
-
-        if (!hasTransparency) {
-          alert('Gambar twibbon harus PNG transparan.');
-          return;
-        }
-
-        twibbonImage = img;
-        drawCanvas();
+        validateTransparency(img, () => {
+          twibbonImage = img;
+          drawCanvas();
+        });
       };
       img.src = event.target.result;
     };
@@ -167,14 +146,40 @@ twibbonInputBtn.addEventListener('click', () => {
   input.click();
 });
 
+function validateTransparency(image, onValid) {
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = image.width;
+  tempCanvas.height = image.height;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx.drawImage(image, 0, 0);
+  const imageData = tempCtx.getImageData(0, 0, image.width, image.height).data;
+
+  let hasTransparent = false;
+  for (let i = 3; i < imageData.length; i += 4) {
+    if (imageData[i] < 255) {
+      hasTransparent = true;
+      break;
+    }
+  }
+
+  if (!hasTransparent) {
+    alert("Twibbon harus memiliki latar transparan (format PNG dengan transparansi).");
+    return;
+  }
+
+  onValid();
+}
+
 downloadBtn.addEventListener('click', () => {
   processingOverlay.style.display = 'flex';
   spinner.style.display = 'block';
   let count = 15;
   countdownEl.textContent = count;
+
   const countdown = setInterval(() => {
     count--;
     countdownEl.textContent = count;
+
     if (count <= 0) {
       clearInterval(countdown);
       spinner.style.display = 'none';
@@ -188,6 +193,8 @@ downloadBtn.addEventListener('click', () => {
       link.href = dataURL;
       link.click();
 
+      drawCanvas(false, false); // bersihkan watermark dari canvas utama
+
       manualDownload.href = dataURL;
       downloadNote.style.display = 'block';
 
@@ -199,25 +206,29 @@ downloadBtn.addEventListener('click', () => {
   }, 1000);
 });
 
-previewBtn.addEventListener('click', () => {
-  const previewCanvas = document.createElement('canvas');
-  previewCanvas.width = canvas.width;
-  previewCanvas.height = canvas.height;
-  const previewCtx = previewCanvas.getContext('2d');
+shareBtn.addEventListener('click', async () => {
+  try {
+    drawCanvas(false, true);
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, 'image/png')
+    );
+    drawCanvas(false, false); // bersihkan watermark dari canvas utama
 
-  if (userImage) {
-    const drawWidth = userImage.width * scale;
-    const drawHeight = userImage.height * scale;
-    previewCtx.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
-  }
-  if (twibbonImage && userImage) {
-    previewCtx.drawImage(twibbonImage, 0, 0, canvas.width, canvas.height);
-  }
+    const file = new File([blob], 'twibbon.png', { type: 'image/png' });
 
-  const previewDataUrl = previewCanvas.toDataURL('image/png');
-  const w = window.open();
-  w.document.write(`<title>Preview</title><img src="${previewDataUrl}" style="width:100%; max-width:100%"/>`);
-  w.document.close();
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Twibbon Saya',
+        text: 'Lihat hasil Twibbon saya!',
+      });
+    } else {
+      alert('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
+    }
+  } catch (error) {
+    console.error('Gagal membagikan:', error);
+    alert('Terjadi kesalahan saat membagikan gambar.');
+  }
 });
 
 resetBtn.addEventListener('click', () => {
@@ -229,36 +240,10 @@ resetBtn.addEventListener('click', () => {
   downloadNote.style.display = 'none';
   shareBtn.style.display = 'none';
   resetBtn.style.display = 'none';
-  previewBtn.style.display = 'none';
   imageInput.value = '';
   imageInput.style.display = 'block';
   buttonText.style.display = 'block';
   drawCanvas();
-});
-
-shareBtn.addEventListener('click', async () => {
-  try {
-    drawCanvas(false, true);
-    const blob = await new Promise((resolve) =>
-      canvas.toBlob(resolve, 'image/png')
-    );
-    const file = new File([blob], 'twibbon.png', { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: 'Twibbon Saya',
-        text: 'Lihat hasil Twibbon saya!',
-      });
-    } else {
-      alert('Perangkat ini tidak mendukung fitur bagikan file.');
-    }
-    drawCanvas(); // Kembalikan canvas tanpa watermark
-  } catch (error) {
-    console.error('Gagal membagikan:', error);
-    alert('Terjadi kesalahan saat membagikan gambar.');
-    drawCanvas(); // Pulihkan canvas
-  }
 });
 
 drawCanvas();
