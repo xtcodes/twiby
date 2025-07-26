@@ -146,6 +146,16 @@ twibbonInputBtn.addEventListener('click', () => {
   input.click();
 });
 
+function showNotification(message, duration = 3000) {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.style.display = 'block';
+  setTimeout(() => {
+    notification.style.display = 'none';
+  }, duration);
+}
+
+
 function validateTransparency(image, onValid) {
   const tempCanvas = document.createElement('canvas');
   tempCanvas.width = image.width;
@@ -163,7 +173,8 @@ function validateTransparency(image, onValid) {
   }
 
   if (!hasTransparent) {
-    alert("Twibbon harus memiliki latar transparan (format PNG dengan transparansi).");
+  //  alert("Twibbon harus memiliki latar transparan (format PNG dengan transparansi).");
+    showNotification('Twibbon harus memiliki latar transparan.');
     return;
   }
 
@@ -247,11 +258,14 @@ shareBtn.addEventListener('click', async () => {
         text: 'Lihat hasil Twibbon saya!',
       });
     } else {
-      alert('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
+     //  alert('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
+      showNotification('Perangkat ini tidak mendukung fitur bagikan file. Silakan unduh manual.');
+
     }
   } catch (error) {
     console.error('Gagal membagikan:', error);
-    alert('Terjadi kesalahan saat membagikan gambar.');
+  //  alert('Terjadi kesalahan saat membagikan gambar.');
+    showNotification('Terjadi kesalahan saat membagikan gambar.');
   }
 });
 
