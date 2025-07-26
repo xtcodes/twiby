@@ -24,7 +24,7 @@ let scale = 1;
 let startX, startY;
 
 const placeholderImage = new Image();
-placeholderImage.src = 'https://picsum.photos/1000';
+placeholderImage.src = 'placeholder.png';
 
 const defaultTwibbon = new Image();
 defaultTwibbon.src = 'twibbon.png';
