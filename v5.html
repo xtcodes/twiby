@@ -9,17 +9,17 @@
       margin: 0;
       font-family: sans-serif;
       background: #f0f0f0;
-      display: flex;
+     /* display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      min-height: 100vh;
-      padding: 10px;
+      min-height: 100vh; */
+      padding: 0;
     }
     #canvasContainer {
       position: relative;
       width: 100%;
-      max-width: 400px;
+    /*  max-width: 400px; */
       aspect-ratio: 1/1;
       background: #ccc;
       margin-bottom: 10px;
@@ -119,13 +119,28 @@
   text-align: center;
   font-size: 16px;
       }
+    main {
+        width: 600px;
+        margin: 5em auto;
+        padding: 2em;
+        background-color: #fdfdff;
+        border-radius: 0.5em;
+        box-shadow: 2px 3px 7px 2px rgba(0,0,0,0.02);
+      }
     a {
       color: #0066ff;
       text-decoration: none;
     }
+    @media (max-width: 700px) {
+        main {
+            margin: 0 auto;
+            width: auto;
+        }
+      }
   </style>
 </head>
 <body>
+  <main>
   <h1>Twibbon App</h1>
 
   <div id="canvasContainer">
@@ -152,6 +167,7 @@
   </div>
   
   <div id="notification"></div>
+  </main>
   
   <script src="v5.js"></script>
 </body>
